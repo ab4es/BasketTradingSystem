@@ -161,16 +161,17 @@ public class BasketOrderPanel extends JPanel {
 
 		btnTransmitBasketOrder.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				ArrayList<Contract> transmitErrors = basketTrader
+				ArrayList<Contract> brokenContracts = basketTrader
 						.transmitOrders();
-				if (transmitErrors.isEmpty()) {
+				if (brokenContracts.isEmpty()) {
 					lblTransmitBasketOrder.setText("Basket Order ("
 							+ file.getName() + ")  Transmitted");
 				} else {
 					final JPanel panel = new JPanel();
 					String errors = "Market data could not be retrieved for the following stock(s): \n";
-					for (Contract c: transmitErrors)
+					for (Contract c : brokenContracts)
 						errors += c.m_symbol + "\n";
+					System.out.println(errors);
 					JOptionPane.showMessageDialog(panel, errors, "Error",
 							JOptionPane.ERROR_MESSAGE);
 				}

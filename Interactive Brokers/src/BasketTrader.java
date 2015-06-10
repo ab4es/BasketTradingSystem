@@ -22,6 +22,7 @@ public class BasketTrader {
 
 	ArrayList<Contract> contracts = new ArrayList<Contract>();
 	ArrayList<Order> orders = new ArrayList<Order>();
+	ArrayList<Contract> brokenContracts = new ArrayList<Contract>();
 
 	int initialBasketSize = 0;
 
@@ -36,7 +37,9 @@ public class BasketTrader {
 		System.out.println();
 		conn = new EClientSocket(cw);
 		conn.eConnect(host, port, clientId);
-		while (!conn.isConnected())
+		long startTime = System.currentTimeMillis();
+		while (!conn.isConnected()
+				&& (System.currentTimeMillis() - startTime) < 10000)
 			System.out.println("");
 		System.out.println();
 		System.out.println("Connected!");
@@ -55,7 +58,9 @@ public class BasketTrader {
 		System.out.println("Disconnecting...");
 		System.out.println();
 		conn.eDisconnect();
-		while (conn.isConnected())
+		long startTime = System.currentTimeMillis();
+		while (conn.isConnected()
+				&& (System.currentTimeMillis() - startTime) < 10000)
 			System.out.println("");
 		System.out.println("Disconnected!");
 		System.out.println();
@@ -69,6 +74,7 @@ public class BasketTrader {
 		BufferedReader br = null;
 		String line = "";
 		String cvsSplitBy = ",";
+
 		try {
 			br = new BufferedReader(new FileReader(file));
 			int counter = 0;
@@ -212,7 +218,6 @@ public class BasketTrader {
 		c.m_exchange = exchange;
 		c.m_primaryExch = primaryExch;
 		c.m_currency = currency;
-		// c.m_conId = orderCounter;
 
 		contracts.add(c);
 
@@ -339,93 +344,28 @@ public class BasketTrader {
 		conn.reqExecutions(orderCounter, null);
 	}
 
-	public ArrayList transmitOrders() {
-		ArrayList<Contract> transmitErrors = new ArrayList<Contract>();
+	public boolean requestMarketData(Order o, Contract c) {
+		boolean marketDataFound = true;
 
-		for (int i = 0; i < orders.size(); i++) {
-			conn.reqMktData(orders.get(i).m_orderId, contracts.get(i), null,
-					true, null);
+		conn.reqMktData(o.m_orderId, c, null, true, null);
 
-			int dataCounter = 0;
-			while ((orders.get(i).m_bid == 0.0 || orders.get(i).m_ask == 0.0
-					|| orders.get(i).m_lastPrice == 0.0
-					|| orders.get(i).m_bidSize == 0 || orders.get(i).m_askSize == 0)
-					&& dataCounter != 25) {
-				System.out.print("");
-				dataCounter++;
-				if (dataCounter == 25) {
-					transmitErrors.add(contracts.get(i));
-				}
-			}
-
-			orders.get(i).m_orderType = "LMT";
-
-			double bid = orders.get(i).m_bid;
-			double ask = orders.get(i).m_ask;
-			double price = orders.get(i).m_lastPrice;
-			int bidSize = orders.get(i).m_bidSize;
-			int askSize = orders.get(i).m_askSize;
-			double spread = ask - bid;
-			double lmtMid = Math.round(((bid + ask) / 2) * 100.0) / 100.0;
-			double ratio = (float) bidSize / askSize;
-
-			System.out.println(contracts.get(i).m_symbol);
-			System.out.println("====");
-			System.out.print("STRATEGY: ");
-
-			if (spread <= 0.01) {
-				orders.get(i).m_orderType = "MKT";
-				System.out.println("MKT");
-			} else if (spread > 0.01 && spread <= 0.02) {
-				if (price < 5) {
-					orders.get(i).m_lmtPrice = lmtMid;
-					System.out.println("LMT MID");
-				} else {
-					orders.get(i).m_orderType = "MKT";
-					System.out.println("MKT");
-				}
-			} else if (spread > 0.02 && spread <= 0.05) {
-				if (ratio > 10
-						&& orders.get(i).m_action.equalsIgnoreCase("BUY")) {
-					orders.get(i).m_orderType = "MKT";
-					System.out.println("MKT");
-				} else if (ratio < 0.1
-						&& orders.get(i).m_action.equalsIgnoreCase("SELL")) {
-					orders.get(i).m_orderType = "MKT";
-					System.out.println("MKT");
-				} else {
-					orders.get(i).m_lmtPrice = lmtMid;
-					System.out.println("LMT MID");
-				}
-			} else if (spread > 0.05) {
-				orders.get(i).m_lmtPrice = lmtMid;
-				System.out.println("LMT MID");
-			} else {
-				orders.get(i).m_lmtPrice = lmtMid;
-				System.out.println("LMT MID");
-			}
-
-			System.out.println("PRICE: " + orders.get(i).m_lastPrice);
-			System.out.println("BID: " + orders.get(i).m_bid);
-			System.out.println("ASK: " + orders.get(i).m_ask);
-			System.out.println("MID: " + lmtMid);
-			System.out.println("SPREAD: " + spread);
-			System.out.println("BID SIZE: " + bidSize);
-			System.out.println("ASK SIZE: " + askSize);
-			System.out.println("RATIO: " + ratio);
-			System.out.println();
-
-			conn.cancelMktData(orders.get(i).m_orderId);
+		long startTime = System.currentTimeMillis();
+		while ((o.m_bid == 0.0 || o.m_ask == 0.0 || o.m_lastPrice == 0.0
+				|| o.m_bidSize == 0 || o.m_askSize == 0)
+				&& (System.currentTimeMillis() - startTime) < 10000) {
+			System.out.print("");
 		}
 
-		for (int x = 0; x < orders.size(); x++) {
-			conn.placeOrder(orders.get(x).m_orderId, contracts.get(x),
-					orders.get(x));
-			System.out.println("Order" + (orders.get(x).m_orderId)
-					+ " Transmitted");
+		if (o.m_bid == 0.0 || o.m_ask == 0.0 || o.m_lastPrice == 0.0
+				|| o.m_bidSize == 0 || o.m_askSize == 0) {
+			brokenContracts.add(c);
+			marketDataFound = false;
 		}
-		System.out.println();
-		return transmitErrors;
+		return marketDataFound;
+	}
+
+	public void cancelMarketData(Order o) {
+		conn.cancelMktData(o.m_orderId);
 	}
 
 	public void cancelOrders() {
@@ -439,31 +379,114 @@ public class BasketTrader {
 		System.out.println();
 	}
 
-	public void cancelAndCorrectOrders() {
+	public void spreadStrategy_Transmit(Order o, Contract c) {
+		o.m_orderType = "LMT";
+
+		double bid = o.m_bid;
+		double ask = o.m_ask;
+		double price = o.m_lastPrice;
+		int bidSize = o.m_bidSize;
+		int askSize = o.m_askSize;
+		double spread = ask - bid;
+		double lmtMid = Math.round(((bid + ask) / 2) * 100.0) / 100.0;
+		double ratio = (float) bidSize / askSize;
+
+		System.out.println(c.m_symbol);
+		System.out.println("====");
+		System.out.print("STRATEGY: ");
+
+		if (spread <= 0.01) {
+			o.m_orderType = "MKT";
+			System.out.println("MKT");
+		} else if (spread > 0.01 && spread <= 0.02) {
+			if (price < 5) {
+				o.m_lmtPrice = lmtMid;
+				System.out.println("LMT MID");
+			} else {
+				o.m_orderType = "MKT";
+				System.out.println("MKT");
+			}
+		} else if (spread > 0.02 && spread <= 0.05) {
+			if (ratio > 10 && o.m_action.equalsIgnoreCase("BUY")) {
+				o.m_orderType = "MKT";
+				System.out.println("MKT");
+			} else if (ratio < 0.1 && o.m_action.equalsIgnoreCase("SELL")) {
+				o.m_orderType = "MKT";
+				System.out.println("MKT");
+			} else {
+				o.m_lmtPrice = lmtMid;
+				System.out.println("LMT MID");
+			}
+		} else if (spread > 0.05) {
+			o.m_lmtPrice = lmtMid;
+			System.out.println("LMT MID");
+		} else {
+			o.m_lmtPrice = lmtMid;
+			System.out.println("LMT MID");
+		}
+
+		System.out.println("PRICE: " + o.m_lastPrice);
+		System.out.println("BID: " + o.m_bid);
+		System.out.println("ASK: " + o.m_ask);
+		System.out.println("MID: " + lmtMid);
+		System.out.println("SPREAD: " + spread);
+		System.out.println("BID SIZE: " + bidSize);
+		System.out.println("ASK SIZE: " + askSize);
+		System.out.println("RATIO: " + ratio);
+		System.out.println();
+	}
+
+	public ArrayList transmitOrders() {
+		brokenContracts.clear();
+
+		for (int i = 0; i < orders.size(); i++) {
+			boolean hasData = this.requestMarketData(orders.get(i),
+					contracts.get(i));
+			if (hasData) {
+				this.spreadStrategy_Transmit(orders.get(i), contracts.get(i));
+				this.cancelMarketData(orders.get(i));
+			} else {
+				this.cancelMarketData(orders.get(i));
+				contracts.remove(i);
+				orders.remove(i);
+			}
+		}
+
+		for (int x = 0; x < orders.size(); x++) {
+			conn.placeOrder(orders.get(x).m_orderId, contracts.get(x),
+					orders.get(x));
+			System.out.println("Order" + (orders.get(x).m_orderId)
+					+ " Transmitted");
+		}
+		System.out.println();
+		return brokenContracts;
+	}
+
+	public ArrayList cancelAndCorrectOrders() {
+		brokenContracts.clear();
+
 		ArrayList<Contract> tempContracts = new ArrayList<Contract>();
 		ArrayList<Order> tempOrders = new ArrayList<Order>();
 
-		for (int x = 0; x < orders.size(); x++) {
-			conn.reqMktData(orders.get(x).m_orderId, contracts.get(x), null,
-					true, null);
-
-			while (orders.get(x).m_bid == 0.0 || orders.get(x).m_ask == 0.0
-					|| orders.get(x).m_lastPrice == 0.0
-					|| orders.get(x).m_bidSize == 0
-					|| orders.get(x).m_askSize == 0) {
-				System.out.print("");
+		for (int i = 0; i < orders.size(); i++) {
+			boolean hasData = this.requestMarketData(orders.get(i),
+					contracts.get(i));
+			if (hasData) {
+				if (!orders.get(i).m_filled) {
+					tempContracts.add(contracts.get(i));
+					tempOrders.add(orders.get(i));
+					while (!conn.cancelOrder(orders.get(i).m_orderId))
+						System.out.println("");
+					System.out.println("Order " + (orders.get(i).m_orderId)
+							+ " canceled");
+					System.out.println();
+				}
+				this.cancelMarketData(orders.get(i));
+			} else {
+				this.cancelMarketData(orders.get(i));
+				contracts.remove(i);
+				orders.remove(i);
 			}
-
-			if (!orders.get(x).m_filled) {
-				tempContracts.add(contracts.get(x));
-				tempOrders.add(orders.get(x));
-				while (!conn.cancelOrder(orders.get(x).m_orderId))
-					System.out.println("");
-				System.out.println("Order " + (orders.get(x).m_orderId)
-						+ " canceled");
-				System.out.println();
-			}
-			conn.cancelMktData(orders.get(x).m_orderId);
 		}
 
 		contracts.clear();
@@ -483,95 +506,100 @@ public class BasketTrader {
 		tempContracts.clear();
 		tempOrders.clear();
 
-		System.out.println("Orders being corrected...");
-		System.out.println();
-
-		for (int i = 0; i < orders.size(); i++) {
-			conn.reqMktData(orders.get(i).m_orderId, contracts.get(i), null,
-					true, null);
-
-			while (orders.get(i).m_bid == 0.0 || orders.get(i).m_ask == 0.0
-					|| orders.get(i).m_lastPrice == 0.0
-					|| orders.get(i).m_bidSize == 0
-					|| orders.get(i).m_askSize == 0) {
-				System.out.print("");
-			}
-
-			double bid = orders.get(i).m_bid;
-			double ask = orders.get(i).m_ask;
-			double price = orders.get(i).m_lastPrice;
-			double lmtPrice = orders.get(i).m_lmtPrice;
-			int bidSize = orders.get(i).m_bidSize;
-			int askSize = orders.get(i).m_askSize;
-			double spread = ask - bid;
-			double lmtMid = Math.round(((bid + ask) / 2) * 100.0) / 100.0;
-			double ratio = (float) bidSize / askSize;
-
-			System.out.println(contracts.get(i).m_symbol);
-			System.out.println("====");
-			System.out.print("STRATEGY: ");
-
-			if ((orders.get(i).m_action.equals("BUY") && lmtPrice >= bid)
-					|| (orders.get(i).m_action.equals("SELL") && lmtPrice <= ask)) {
-				if (spread <= 0.01 && price > 5) {
-					orders.get(i).m_orderType = "MKT";
-					System.out.println("MKT");
-				} else {
-					System.out.println("HOLD");
-				}
-			} else if (spread <= 0.01) {
-				orders.get(i).m_orderType = "MKT";
-				System.out.println("MKT");
-			} else if (spread > 0.01 && spread <= 0.02) {
-				if (price < 5) {
-					orders.get(i).m_lmtPrice = lmtMid;
-					System.out.println("LMT MID");
-				} else {
-					orders.get(i).m_orderType = "MKT";
-					System.out.println("MKT");
-				}
-			} else if (spread > 0.02 && spread <= 0.05) {
-				if (ratio > 10
-						&& orders.get(i).m_action.equalsIgnoreCase("BUY")) {
-					orders.get(i).m_orderType = "MKT";
-					System.out.println("MKT");
-				} else if (ratio < 0.1
-						&& orders.get(i).m_action.equalsIgnoreCase("SELL")) {
-					orders.get(i).m_orderType = "MKT";
-					System.out.println("MKT");
-				} else {
-					orders.get(i).m_lmtPrice = lmtMid;
-					System.out.println("LMT MID");
-				}
-			} else if (spread > 0.05) {
-				orders.get(i).m_lmtPrice = lmtMid;
-				System.out.println("LMT MID");
-			} else {
-				orders.get(i).m_lmtPrice = lmtMid;
-				System.out.println("LMT MID");
-			}
-
-			System.out.println("PRICE: " + orders.get(i).m_lastPrice);
-			System.out.println("LMT PRICE: " + orders.get(i).m_lmtPrice);
-			System.out.println("BID: " + orders.get(i).m_bid);
-			System.out.println("ASK: " + orders.get(i).m_ask);
-			System.out.println("MID: " + lmtMid);
-			System.out.println("SPREAD: " + spread);
-			System.out.println("BID SIZE: " + bidSize);
-			System.out.println("ASK SIZE: " + askSize);
-			System.out.println("RATIO: " + ratio);
+		if (!orders.isEmpty()) {
+			System.out.println("Orders being corrected...");
 			System.out.println();
 
-			conn.cancelMktData(orders.get(i).m_orderId);
-		}
+			for (int i = 0; i < orders.size(); i++) {
+				conn.reqMktData(orders.get(i).m_orderId, contracts.get(i),
+						null, true, null);
 
-		for (int x = 0; x < orders.size(); x++) {
-			conn.placeOrder(orders.get(x).m_orderId, contracts.get(x),
-					orders.get(x));
-			System.out.println("Order " + (orders.get(x).m_orderId)
-					+ " Corrected");
+				while (orders.get(i).m_bid == 0.0 || orders.get(i).m_ask == 0.0
+						|| orders.get(i).m_lastPrice == 0.0
+						|| orders.get(i).m_bidSize == 0
+						|| orders.get(i).m_askSize == 0) {
+					System.out.print("");
+				}
+
+				double bid = orders.get(i).m_bid;
+				double ask = orders.get(i).m_ask;
+				double price = orders.get(i).m_lastPrice;
+				double lmtPrice = orders.get(i).m_lmtPrice;
+				int bidSize = orders.get(i).m_bidSize;
+				int askSize = orders.get(i).m_askSize;
+				double spread = ask - bid;
+				double lmtMid = Math.round(((bid + ask) / 2) * 100.0) / 100.0;
+				double ratio = (float) bidSize / askSize;
+
+				System.out.println(contracts.get(i).m_symbol);
+				System.out.println("====");
+				System.out.print("STRATEGY: ");
+
+				if ((orders.get(i).m_action.equals("BUY") && lmtPrice >= bid)
+						|| (orders.get(i).m_action.equals("SELL") && lmtPrice <= ask)) {
+					if (spread <= 0.01 && price > 5) {
+						orders.get(i).m_orderType = "MKT";
+						System.out.println("MKT");
+					} else {
+						System.out.println("HOLD");
+					}
+				} else if (spread <= 0.01) {
+					orders.get(i).m_orderType = "MKT";
+					System.out.println("MKT");
+				} else if (spread > 0.01 && spread <= 0.02) {
+					if (price < 5) {
+						orders.get(i).m_lmtPrice = lmtMid;
+						System.out.println("LMT MID");
+					} else {
+						orders.get(i).m_orderType = "MKT";
+						System.out.println("MKT");
+					}
+				} else if (spread > 0.02 && spread <= 0.05) {
+					if (ratio > 10
+							&& orders.get(i).m_action.equalsIgnoreCase("BUY")) {
+						orders.get(i).m_orderType = "MKT";
+						System.out.println("MKT");
+					} else if (ratio < 0.1
+							&& orders.get(i).m_action.equalsIgnoreCase("SELL")) {
+						orders.get(i).m_orderType = "MKT";
+						System.out.println("MKT");
+					} else {
+						orders.get(i).m_lmtPrice = lmtMid;
+						System.out.println("LMT MID");
+					}
+				} else if (spread > 0.05) {
+					orders.get(i).m_lmtPrice = lmtMid;
+					System.out.println("LMT MID");
+				} else {
+					orders.get(i).m_lmtPrice = lmtMid;
+					System.out.println("LMT MID");
+				}
+
+				System.out.println("PRICE: " + orders.get(i).m_lastPrice);
+				System.out.println("LMT PRICE: " + orders.get(i).m_lmtPrice);
+				System.out.println("BID: " + orders.get(i).m_bid);
+				System.out.println("ASK: " + orders.get(i).m_ask);
+				System.out.println("MID: " + lmtMid);
+				System.out.println("SPREAD: " + spread);
+				System.out.println("BID SIZE: " + bidSize);
+				System.out.println("ASK SIZE: " + askSize);
+				System.out.println("RATIO: " + ratio);
+				System.out.println();
+
+				conn.cancelMktData(orders.get(i).m_orderId);
+			}
+
+			for (int x = 0; x < orders.size(); x++) {
+				conn.placeOrder(orders.get(x).m_orderId, contracts.get(x),
+						orders.get(x));
+				System.out.println("Order " + (orders.get(x).m_orderId)
+						+ " Corrected");
+			}
+		} else {
+			System.out.println("No orders to be corrected");
 		}
 		System.out.println();
+		return brokenContracts;
 	}
 
 	public void run() {
