@@ -14,6 +14,7 @@ import javax.swing.JPanel;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 import com.ib.client.Contract;
+import javax.swing.JTable;
 
 public class BasketOrderPanel extends JPanel {
 
@@ -33,6 +34,7 @@ public class BasketOrderPanel extends JPanel {
 	JLabel lblCancelBasketOrder;
 	JLabel lblCancelAndCorrect;
 	JLabel lblRealizedPNL;
+	private JTable table;
 
 	/**
 	 * Create the panel.
@@ -46,7 +48,7 @@ public class BasketOrderPanel extends JPanel {
 		gridBagLayout.columnWeights = new double[] { 0.0, 1.0, 0.0, 1.0, 0.0,
 				1.0, Double.MIN_VALUE };
 		gridBagLayout.rowWeights = new double[] { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-				0.0, 0.0, 0.0, Double.MIN_VALUE };
+				0.0, 1.0, 0.0, Double.MIN_VALUE };
 		setLayout(gridBagLayout);
 
 		this.createLoadBasketButton();
@@ -90,6 +92,15 @@ public class BasketOrderPanel extends JPanel {
 								+ file.getName() + ") Not Transmitted");
 						lblCancelBasketOrder.setText("Basket Order ("
 								+ file.getName() + ") Not Cancelled");
+						Object[][] rowData = basketTrader.getRowData();
+						/*
+						 * Object[][] rowData = { { "Symbol", "Action",
+						 * "Quantity", "Exchange", "OrderType" }, { "AAPL",
+						 * "BUY", "100", "SMART/ARCA", "LMT" }, { "RAX", "SELL",
+						 * "623", "SMART/ARCA", "LMT" } };
+						 */
+						String[] columnNames = { "", "", "", "", "" };
+						createOrdersTable(rowData, columnNames);
 					} else {
 						final JPanel panel = new JPanel();
 						String errors = "";
@@ -286,5 +297,16 @@ public class BasketOrderPanel extends JPanel {
 
 	public void updatePNL(double pnl) {
 		lblRealizedPNL.setText("Realized P&L: " + pnl);
+	}
+
+	public void createOrdersTable(Object[][] rowData, String[] columnNames) {
+		table = new JTable(rowData, columnNames);
+		GridBagConstraints gbc_table = new GridBagConstraints();
+		gbc_table.gridwidth = 5;
+		gbc_table.insets = new Insets(0, 0, 5, 5);
+		gbc_table.fill = GridBagConstraints.HORIZONTAL;
+		gbc_table.gridx = 1;
+		gbc_table.gridy = 7;
+		add(table, gbc_table);
 	}
 }

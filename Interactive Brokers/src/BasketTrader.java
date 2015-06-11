@@ -18,6 +18,7 @@ public class BasketTrader {
 
 	CustomWrapper cw;
 	public static EClientSocket conn;
+	ConnectionPanel connectionPanel = new ConnectionPanel(this);
 	BasketOrderPanel basketOrderPanel = new BasketOrderPanel(this);
 
 	ArrayList<Contract> contracts = new ArrayList<Contract>();
@@ -25,25 +26,33 @@ public class BasketTrader {
 	ArrayList<Contract> brokenContracts = new ArrayList<Contract>();
 
 	int initialBasketSize = 0;
-
 	int orderCounter = 0;
+	Object[][] rowData = new Object[1][5];
 
 	public BasketTrader() {
 		cw = new CustomWrapper(this);
 	}
 
-	public void connect(String host, int port, int clientId) {
+	public boolean connect(String host, int port, int clientId) {
 		System.out.println("Connecting...");
 		System.out.println();
 		conn = new EClientSocket(cw);
 		conn.eConnect(host, port, clientId);
+		boolean isConn = false;
 		long startTime = System.currentTimeMillis();
 		while (!conn.isConnected()
-				&& (System.currentTimeMillis() - startTime) < 10000)
-			System.out.println("");
-		System.out.println();
-		System.out.println("Connected!");
-		System.out.println();
+				&& (System.currentTimeMillis() - startTime) < 5000)
+			System.out.print("");
+		if (conn.isConnected()) {
+			isConn = true;
+			System.out.println();
+			System.out.println("Connected!");
+			System.out.println();
+		} else {
+			System.out.println();
+			System.out.println("Connection failed!");
+			System.out.println();
+		}
 
 		Scanner scanner;
 		try {
@@ -52,18 +61,29 @@ public class BasketTrader {
 		} catch (FileNotFoundException e) {
 			System.out.println(e.toString());
 		}
+		return isConn;
 	}
 
-	public void disconnect() {
+	public boolean disconnect() {
 		System.out.println("Disconnecting...");
 		System.out.println();
 		conn.eDisconnect();
+		boolean isConn = true;
 		long startTime = System.currentTimeMillis();
 		while (conn.isConnected()
-				&& (System.currentTimeMillis() - startTime) < 10000)
-			System.out.println("");
-		System.out.println("Disconnected!");
-		System.out.println();
+				&& (System.currentTimeMillis() - startTime) < 5000)
+			System.out.print("");
+		if (!conn.isConnected()) {
+			isConn = false;
+			System.out.println();
+			System.out.println("Disconnected!");
+			System.out.println();
+		} else {
+			System.out.println();
+			System.out.println("Disconnection failed!");
+			System.out.println();
+		}
+		return !isConn;
 	}
 
 	public ArrayList readCSV(File file) {
@@ -74,6 +94,10 @@ public class BasketTrader {
 		BufferedReader br = null;
 		String line = "";
 		String cvsSplitBy = ",";
+
+		String[] columnNames = { "Symbol", "Action", "Quantity", "Exchange",
+				"OrderType" };
+		rowData[0] = columnNames;
 
 		try {
 			br = new BufferedReader(new FileReader(file));
@@ -198,6 +222,14 @@ public class BasketTrader {
 					this.addOrder(action, quantity, tif, orderType, lmtPrice,
 							account, ocaGroup, triggerMethod, outsideRth,
 							orderRef, faProfile);
+					String[] row = { symbol, action, "" + quantity, exchange,
+							orderType };
+					Object[][] temp = new Object[rowData.length + 1][rowData[0].length];
+					for (int x = 0; x < rowData.length; x++)
+						for (int y = 0; y < rowData[0].length; y++)
+							temp[x][y] = rowData[x][y];
+					temp[temp.length - 1] = row;
+					rowData = temp;
 				}
 				counter++;
 				initialBasketSize = orders.size();
@@ -342,6 +374,12 @@ public class BasketTrader {
 
 	public void manualPNLUpdate() {
 		conn.reqExecutions(orderCounter, null);
+	}
+
+	public Object[][] getRowData() {
+		Object[][] temp = rowData;
+		rowData = null;
+		return temp;
 	}
 
 	public boolean requestMarketData(Order o, Contract c) {

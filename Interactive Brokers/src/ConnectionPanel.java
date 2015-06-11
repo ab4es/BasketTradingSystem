@@ -89,11 +89,12 @@ public class ConnectionPanel extends JPanel {
 		this.add(btnConnect, gbc_btnConnect);
 		btnConnect.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				basketTrader.connect(hostField.getText(),
+				if(basketTrader.connect(hostField.getText(),
 						Integer.parseInt(portField.getText()),
-						Integer.parseInt(clientIdField.getText()));
-				if (basketTrader.conn.isConnected())
+						Integer.parseInt(clientIdField.getText())))
 					lblConnection.setText("Connected");
+				else 
+					lblConnection.setText("Connection failed!");
 			}
 		});
 	}
@@ -128,9 +129,11 @@ public class ConnectionPanel extends JPanel {
 		this.add(btnDisconnect, gbc_btnDisconnect);
 		btnDisconnect.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				basketTrader.disconnect();
-				if (!basketTrader.conn.isConnected())
+				if(basketTrader.disconnect())
 					lblConnection.setText("Disconnected");
+				else
+					lblConnection.setText("Disconnection failed!");
+					
 			}
 		});
 	}
