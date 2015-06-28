@@ -67,11 +67,11 @@ public class BasketOrderPanel extends JPanel {
 		btnLoadBasket.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				// Harvey's directory of choice
-				// fileChooser = new JFileChooser("C:\\Bbrg\\Trades"); 
-				
+				fileChooser = new JFileChooser("C:\\Bbrg\\Trades");
+
 				// Aditya's directory of choice
-				fileChooser = new JFileChooser(System.getProperty("user.home")
-						+ "/Desktop"); 
+				// fileChooser = new
+				// JFileChooser(System.getProperty("user.home") + "/Desktop");
 
 				// Limit files selected to only CSV files
 				FileNameExtensionFilter filter = new FileNameExtensionFilter(
@@ -83,13 +83,13 @@ public class BasketOrderPanel extends JPanel {
 				int result = fileChooser.showOpenDialog(null);
 				if (result == JFileChooser.APPROVE_OPTION) {
 					file = fileChooser.getSelectedFile();
-					
+
 					// Load the orders into a new Basket
 					Basket basket = new Basket(file);
-					
+
 					// This will hold any errors from the CSV
 					ArrayList<Integer> csvErrors = IOHandler.getCSVErrors();
-					
+
 					// If there are no CSV errors
 					if (csvErrors.isEmpty()) {
 						// Dialog box formatted accordingly
@@ -100,7 +100,7 @@ public class BasketOrderPanel extends JPanel {
 						lblCancelBasketOrder.setText("Basket Order ("
 								+ file.getName() + ") Not Cancelled");
 						basketOrderLoads++;
-					} 
+					}
 					// If CSV errors exist
 					else {
 						final JPanel panel = new JPanel();
@@ -176,16 +176,16 @@ public class BasketOrderPanel extends JPanel {
 			public void actionPerformed(ActionEvent e) {
 				// Run the normal spread strategy
 				Strategy.runSpreadStrategy(false);
-				
+
 				// Keep a list of any broken contracts
 				ArrayList<Contract> brokenContracts = Basket
 						.getBrokenContracts();
-				
+
 				// If there are no broken Contracts
 				if (brokenContracts.isEmpty()) {
 					lblTransmitBasketOrder.setText("Basket Order ("
 							+ file.getName() + ")  Transmitted");
-				} 
+				}
 				// If broken Contracts exist
 				else {
 					final JPanel panel = new JPanel();
@@ -193,7 +193,7 @@ public class BasketOrderPanel extends JPanel {
 					for (Contract c : brokenContracts)
 						errors += c.m_symbol + "\n";
 					System.out.println(errors);
-					
+
 					// Alert the system which contracts are broken
 					JOptionPane.showMessageDialog(panel, errors, "Error",
 							JOptionPane.ERROR_MESSAGE);
