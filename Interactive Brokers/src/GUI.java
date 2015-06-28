@@ -32,8 +32,6 @@ public class GUI extends JFrame {
 	 * Create the frame.
 	 */
 	public GUI() {
-		BasketTrader basketTrader = new BasketTrader();
-
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 720, 480);
 		contentPane = new JPanel();
@@ -44,10 +42,10 @@ public class GUI extends JFrame {
 		JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
 		contentPane.add(tabbedPane, BorderLayout.CENTER);
 
-		ConnectionPanel connectionPanel = new ConnectionPanel(basketTrader);
+		ConnectionPanel connectionPanel = new ConnectionPanel();
 		tabbedPane.addTab("Connection", null, connectionPanel, null);
 
-		BasketOrderPanel basketOrderPanel = new BasketOrderPanel(basketTrader);
+		BasketOrderPanel basketOrderPanel = new BasketOrderPanel();
 		tabbedPane.addTab("Basket Order", null, basketOrderPanel, null);
 	}
 
