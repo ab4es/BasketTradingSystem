@@ -14,7 +14,7 @@ public class Strategy {
 			if (!Basket.getOrders().isEmpty()) {
 				System.out.println("Orders being corrected...");
 				System.out.println();
-				
+
 				// Loop through all Orders
 				for (int i = 0; i < Basket.getOrders().size(); i++) {
 					// Request market data
@@ -26,7 +26,7 @@ public class Strategy {
 								.getOrders().get(i),
 								Basket.getContracts().get(i));
 						Socket.cancelMarketData(Basket.getOrders().get(i));
-					} 
+					}
 					// If market data cannot be obtained
 					else {
 						Socket.cancelMarketData(Basket.getOrders().get(i));
@@ -61,7 +61,7 @@ public class Strategy {
 				}
 			}
 		}
-		
+
 		Socket.transmitOrders();
 	}
 
@@ -86,30 +86,39 @@ public class Strategy {
 
 		// Normal strategy implementation
 		if (spread <= 0.01) {
+			String outerMsg = "spread <= 0.01";
 			order.m_orderType = "MKT";
-			System.out.println("MKT");
+			System.out.println("MKT[" + outerMsg + "]");
 		} else if (spread > 0.01 && spread <= 0.02) {
+			String outerMsg = "0.01 < spread <= 0.02";
 			if (price < 5) {
 				order.m_lmtPrice = lmtMid;
-				System.out.println("LMT MID");
+				System.out.println("LMT MID[" + outerMsg + " & price < 5]");
 			} else {
 				order.m_orderType = "MKT";
-				System.out.println("MKT");
+				System.out.println("MKT[" + outerMsg + " & price >= 5]");
 			}
 		} else if (spread > 0.02 && spread <= 0.05) {
+			String outerMsg = "0.02 < spread <= 0.05";
 			if (ratio > 10 && order.m_action.equalsIgnoreCase("BUY")) {
 				order.m_orderType = "MKT";
-				System.out.println("MKT");
+				System.out.println("MKT[" + outerMsg
+						+ " & ratio > 10 & BUY order]");
 			} else if (ratio < 0.1 && order.m_action.equalsIgnoreCase("SELL")) {
 				order.m_orderType = "MKT";
-				System.out.println("MKT");
+				System.out.println("MKT[" + outerMsg
+						+ " & ratio < 10 & SELL order]");
 			} else {
 				order.m_lmtPrice = lmtMid;
-				System.out.println("LMT MID");
+				System.out
+						.println("LMT MID["
+								+ outerMsg
+								+ " & NOT(ratio > 10 & BUY order) & NOT(ratio < 10 & SELL order)]");
 			}
 		} else if (spread > 0.05) {
+			String outerMsg = "spread > 0.05";
 			order.m_lmtPrice = lmtMid;
-			System.out.println("LMT MID");
+			System.out.println("LMT MID[" + outerMsg + "]");
 		} else {
 			order.m_lmtPrice = lmtMid;
 			System.out.println("LMT MID");
@@ -148,42 +157,60 @@ public class Strategy {
 
 		System.out.println(contract.m_symbol);
 		System.out.println("====");
+		System.out.println("CANCEL AND CORRECT...");
+		System.out.println();
 		System.out.print("STRATEGY: ");
 
 		// Cancel and correct strategy implementation
 		if ((order.m_action.equals("BUY") && lmtPrice >= bid)
 				|| (order.m_action.equals("SELL") && lmtPrice <= ask)) {
+			String outerMsg = "";
+			if (order.m_action.equals("BUY"))
+				outerMsg += "BUY & lmtPrice >= bid";
+			else
+				outerMsg += "SELL & lmtPrice <= ask";
 			if (spread <= 0.01 && price > 5) {
 				order.m_orderType = "MKT";
-				System.out.println("MKT");
+				System.out.println("MKT[" + outerMsg
+						+ " & spread <= 0.01 & price > 5]");
 			} else {
-				System.out.println("HOLD");
+				System.out.println("HOLD[" + outerMsg
+						+ " & (spread > 0.01 OR price <= 5)]");
 			}
 		} else if (spread <= 0.01) {
+			String outerMsg = "spread <= 0.01";
 			order.m_orderType = "MKT";
-			System.out.println("MKT");
+			System.out.println("MKT[" + outerMsg + "]");
 		} else if (spread > 0.01 && spread <= 0.02) {
+			String outerMsg = "0.01 < spread <= 0.02";
 			if (price < 5) {
 				order.m_lmtPrice = lmtMid;
-				System.out.println("LMT MID");
+				System.out.println("LMT MID[" + outerMsg + " & price < 5]");
 			} else {
 				order.m_orderType = "MKT";
-				System.out.println("MKT");
+				System.out.println("MKT[" + outerMsg + " & price <= 5]");
 			}
 		} else if (spread > 0.02 && spread <= 0.05) {
+			String outerMsg = "0.02 < spread <= 0.05";
 			if (ratio > 10 && order.m_action.equalsIgnoreCase("BUY")) {
 				order.m_orderType = "MKT";
-				System.out.println("MKT");
+				System.out.println("MKT[" + outerMsg
+						+ " & ratio > 10 & BUY order]");
 			} else if (ratio < 0.1 && order.m_action.equalsIgnoreCase("SELL")) {
 				order.m_orderType = "MKT";
-				System.out.println("MKT");
+				System.out.println("MKT[" + outerMsg
+						+ " & ratio < 10 & SELL order]");
 			} else {
 				order.m_lmtPrice = lmtMid;
-				System.out.println("LMT MID");
+				System.out
+						.println("LMT MID["
+								+ outerMsg
+								+ " & NOT(ratio > 10 & BUY order) & NOT(ratio < 10 & SELL order)]");
 			}
 		} else if (spread > 0.05) {
+			String outerMsg = "spread > 0.05";
 			order.m_lmtPrice = lmtMid;
-			System.out.println("LMT MID");
+			System.out.println("LMT MID[" + outerMsg + "]");
 		} else {
 			order.m_lmtPrice = lmtMid;
 			System.out.println("LMT MID");
@@ -200,7 +227,7 @@ public class Strategy {
 		System.out.println("ASK SIZE: " + askSize);
 		System.out.println("RATIO: " + ratio);
 		System.out.println();
-		
+
 		// Replace or "update" the Orders with this calculated spread
 		Basket.replaceOrder(order);
 	}

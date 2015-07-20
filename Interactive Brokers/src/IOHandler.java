@@ -34,6 +34,7 @@ public class IOHandler {
 		Basket.clearContracts();
 		Basket.clearBrokenContracts();
 		Basket.clearOrders();
+		csvErrors.clear();
 
 		BufferedReader br = null;
 		String line = "";

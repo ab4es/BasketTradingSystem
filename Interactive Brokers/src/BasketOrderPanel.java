@@ -67,11 +67,11 @@ public class BasketOrderPanel extends JPanel {
 		btnLoadBasket.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				// Harvey's directory of choice
-				fileChooser = new JFileChooser("C:\\Bbrg\\Trades");
+				// fileChooser = new JFileChooser("C:\\Bbrg\\Trades");
 
 				// Aditya's directory of choice
-				// fileChooser = new
-				// JFileChooser(System.getProperty("user.home") + "/Desktop");
+				fileChooser = new JFileChooser(System.getProperty("user.home")
+						+ "/Desktop");
 
 				// Limit files selected to only CSV files
 				FileNameExtensionFilter filter = new FileNameExtensionFilter(
