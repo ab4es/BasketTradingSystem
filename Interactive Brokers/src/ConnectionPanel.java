@@ -14,8 +14,6 @@ import javax.swing.text.NumberFormatter;
 
 public class ConnectionPanel extends JPanel {
 
-	BasketTrader basketTrader;
-
 	JLabel lblHost;
 	JLabel lblPort;
 	JLabel lblClientId;
@@ -31,9 +29,7 @@ public class ConnectionPanel extends JPanel {
 	/**
 	 * Create the panel.
 	 */
-	public ConnectionPanel(BasketTrader trader) {
-		basketTrader = trader;
-
+	public ConnectionPanel() {
 		GridBagLayout gbl_connectionPanel = new GridBagLayout();
 		gbl_connectionPanel.columnWidths = new int[] { 0, 0, 0, 0, 0 };
 		gbl_connectionPanel.rowHeights = new int[] { 0, 0, 0, 0, 0, 0 };
@@ -89,11 +85,11 @@ public class ConnectionPanel extends JPanel {
 		this.add(btnConnect, gbc_btnConnect);
 		btnConnect.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				if(basketTrader.connect(hostField.getText(),
+				if (Socket.connect(hostField.getText(),
 						Integer.parseInt(portField.getText()),
 						Integer.parseInt(clientIdField.getText())))
 					lblConnection.setText("Connected");
-				else 
+				else
 					lblConnection.setText("Connection failed!");
 			}
 		});
@@ -129,11 +125,11 @@ public class ConnectionPanel extends JPanel {
 		this.add(btnDisconnect, gbc_btnDisconnect);
 		btnDisconnect.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				if(basketTrader.disconnect())
+				if (Socket.disconnect())
 					lblConnection.setText("Disconnected");
 				else
 					lblConnection.setText("Disconnection failed!");
-					
+
 			}
 		});
 	}

@@ -2,10 +2,7 @@ import com.ib.client.*;
 
 public class CustomWrapper implements EWrapper {
 
-	BasketTrader basketTrader;
-
-	public CustomWrapper(BasketTrader trader) {
-		basketTrader = trader;
+	public CustomWrapper() {
 	}
 
 	public static void main(String[] args) {
@@ -42,13 +39,12 @@ public class CustomWrapper implements EWrapper {
 	@Override
 	public void tickPrice(int tickerId, int field, double price,
 			int canAutoExecute) {
-		basketTrader.updateBidAskPrices(tickerId, field, price, canAutoExecute);
+		Basket.updateBidAskLastPrice(tickerId, field, price, canAutoExecute);
 	}
 
 	@Override
 	public void tickSize(int tickerId, int field, int size) {
-		basketTrader.updateBidAskSizes(tickerId, field, size);
-
+		Basket.updateBidAskSizes(tickerId, field, size);
 	}
 
 	@Override
@@ -84,7 +80,7 @@ public class CustomWrapper implements EWrapper {
 	public void orderStatus(int orderId, String status, int filled,
 			int remaining, double avgFillPrice, int permId, int parentId,
 			double lastFillPrice, int clientId, String whyHeld) {
-		basketTrader.updateOrderStatus(orderId, status, filled, remaining,
+		Basket.updateOrderStatus(orderId, status, filled, remaining,
 				avgFillPrice, permId, parentId, lastFillPrice, clientId,
 				whyHeld);
 

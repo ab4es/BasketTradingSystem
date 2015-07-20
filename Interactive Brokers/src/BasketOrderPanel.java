@@ -17,9 +17,6 @@ import com.ib.client.Contract;
 import javax.swing.JTable;
 
 public class BasketOrderPanel extends JPanel {
-
-	BasketTrader basketTrader;
-
 	JFileChooser fileChooser;
 	File file;
 
@@ -34,14 +31,14 @@ public class BasketOrderPanel extends JPanel {
 	JLabel lblCancelBasketOrder;
 	JLabel lblCancelAndCorrect;
 	JLabel lblRealizedPNL;
-	private JTable table;
+	JTable table;
+
+	int basketOrderLoads = 0;
 
 	/**
 	 * Create the panel.
 	 */
-	public BasketOrderPanel(BasketTrader trader) {
-		basketTrader = trader;
-
+	public BasketOrderPanel() {
 		GridBagLayout gridBagLayout = new GridBagLayout();
 		gridBagLayout.columnWidths = new int[] { 0, 0, 0, 0, 0, 0, 0 };
 		gridBagLayout.rowHeights = new int[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
@@ -62,9 +59,6 @@ public class BasketOrderPanel extends JPanel {
 
 		this.createCancelAndCorrectButton();
 		this.createCancelAndCorrectLabel();
-
-		// this.createUpdatePNLButton();
-		// this.createRealizedPNLLabel();
 	}
 
 	public void createLoadBasketButton() {
@@ -72,38 +66,46 @@ public class BasketOrderPanel extends JPanel {
 
 		btnLoadBasket.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+				// Harvey's directory of choice
 				// fileChooser = new JFileChooser("C:\\Bbrg\\Trades");
 
+				// Aditya's directory of choice
 				fileChooser = new JFileChooser(System.getProperty("user.home")
 						+ "/Desktop");
 
+				// Limit files selected to only CSV files
 				FileNameExtensionFilter filter = new FileNameExtensionFilter(
 						"CSV Files", "csv");
 				fileChooser.setFileFilter(filter);
 				fileChooser.setDialogTitle("Select Basket Order CSV File");
+
+				// Get the CSV file
 				int result = fileChooser.showOpenDialog(null);
 				if (result == JFileChooser.APPROVE_OPTION) {
 					file = fileChooser.getSelectedFile();
-					ArrayList<Integer> csvErrors = basketTrader.readCSV(file);
+
+					// Load the orders into a new Basket
+					Basket basket = new Basket(file);
+
+					// This will hold any errors from the CSV
+					ArrayList<Integer> csvErrors = IOHandler.getCSVErrors();
+
+					// If there are no CSV errors
 					if (csvErrors.isEmpty()) {
+						// Dialog box formatted accordingly
 						lblLoadBasket.setText("Basket Order (" + file.getName()
 								+ ") Loaded");
 						lblTransmitBasketOrder.setText("Basket Order ("
 								+ file.getName() + ") Not Transmitted");
 						lblCancelBasketOrder.setText("Basket Order ("
 								+ file.getName() + ") Not Cancelled");
-						Object[][] rowData = basketTrader.getRowData();
-						/*
-						 * Object[][] rowData = { { "Symbol", "Action",
-						 * "Quantity", "Exchange", "OrderType" }, { "AAPL",
-						 * "BUY", "100", "SMART/ARCA", "LMT" }, { "RAX", "SELL",
-						 * "623", "SMART/ARCA", "LMT" } };
-						 */
-						String[] columnNames = { "", "", "", "", "" };
-						createOrdersTable(rowData, columnNames);
-					} else {
+						basketOrderLoads++;
+					}
+					// If CSV errors exist
+					else {
 						final JPanel panel = new JPanel();
 						String errors = "";
+						// Determine what CSV errors exist
 						for (int i : csvErrors) {
 							if (i == 0)
 								errors += "m_action Error! \n";
@@ -150,10 +152,10 @@ public class BasketOrderPanel extends JPanel {
 							else if (i == 33)
 								errors += "Profile column may be incorrect. \n";
 						}
+						// Alert the system of the CSV error
 						JOptionPane.showMessageDialog(panel, errors, "Error",
 								JOptionPane.ERROR_MESSAGE);
 					}
-
 				} else {
 					lblLoadBasket.setText("Basket Order Not Selected");
 				}
@@ -172,17 +174,27 @@ public class BasketOrderPanel extends JPanel {
 
 		btnTransmitBasketOrder.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				ArrayList<Contract> brokenContracts = basketTrader
-						.transmitOrders();
+				// Run the normal spread strategy
+				Strategy.runSpreadStrategy(false);
+
+				// Keep a list of any broken contracts
+				ArrayList<Contract> brokenContracts = Basket
+						.getBrokenContracts();
+
+				// If there are no broken Contracts
 				if (brokenContracts.isEmpty()) {
 					lblTransmitBasketOrder.setText("Basket Order ("
 							+ file.getName() + ")  Transmitted");
-				} else {
+				}
+				// If broken Contracts exist
+				else {
 					final JPanel panel = new JPanel();
 					String errors = "Market data could not be retrieved for the following stock(s): \n";
 					for (Contract c : brokenContracts)
 						errors += c.m_symbol + "\n";
 					System.out.println(errors);
+
+					// Alert the system which contracts are broken
 					JOptionPane.showMessageDialog(panel, errors, "Error",
 							JOptionPane.ERROR_MESSAGE);
 				}
@@ -201,7 +213,8 @@ public class BasketOrderPanel extends JPanel {
 
 		btnCancelBasketOrder.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				basketTrader.cancelOrders();
+				// Cancel all outstanding errors
+				Socket.cancelOrders();
 				lblLoadBasket.setText("No Basket Loaded");
 				lblTransmitBasketOrder.setText("No Basket Order Transmitted");
 				lblCancelBasketOrder.setText("Basket Order (" + file.getName()
@@ -248,7 +261,8 @@ public class BasketOrderPanel extends JPanel {
 
 		btnCancelAndCorrect.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				basketTrader.cancelAndCorrectOrders();
+				// Cancel and correct all outstanding Orders
+				Strategy.runSpreadStrategy(true);
 				lblCancelAndCorrect.setText("Basket Order (" + file.getName()
 						+ ")  Cancelled and Corrected");
 			}
@@ -270,36 +284,12 @@ public class BasketOrderPanel extends JPanel {
 		add(lblCancelAndCorrect, gbc_lblCancelAndCorrect);
 	}
 
-	public void createUpdatePNLButton() {
-		btnUpdatePNL = new JButton("Update P&L");
-
-		btnUpdatePNL.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				basketTrader.manualPNLUpdate();
-			}
-		});
-
-		GridBagConstraints gbc_btnUpdatePNL = new GridBagConstraints();
-		gbc_btnUpdatePNL.insets = new Insets(0, 0, 5, 5);
-		gbc_btnUpdatePNL.gridx = 3;
-		gbc_btnUpdatePNL.gridy = 7;
-		add(btnUpdatePNL, gbc_btnUpdatePNL);
-	}
-
-	public void createRealizedPNLLabel() {
-		lblRealizedPNL = new JLabel("Realized P&L:");
-		GridBagConstraints gbc_lblRealizedPNL = new GridBagConstraints();
-		gbc_lblRealizedPNL.insets = new Insets(0, 0, 0, 5);
-		gbc_lblRealizedPNL.gridx = 3;
-		gbc_lblRealizedPNL.gridy = 8;
-		add(lblRealizedPNL, gbc_lblRealizedPNL);
-	}
-
-	public void updatePNL(double pnl) {
-		lblRealizedPNL.setText("Realized P&L: " + pnl);
-	}
-
 	public void createOrdersTable(Object[][] rowData, String[] columnNames) {
+		if (basketOrderLoads > 0) {
+			table.clearSelection();
+			table.repaint();
+		}
+		table.repaint();
 		table = new JTable(rowData, columnNames);
 		GridBagConstraints gbc_table = new GridBagConstraints();
 		gbc_table.gridwidth = 5;
