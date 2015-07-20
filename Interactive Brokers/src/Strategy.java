@@ -157,8 +157,6 @@ public class Strategy {
 
 		System.out.println(contract.m_symbol);
 		System.out.println("====");
-		System.out.println("CANCEL AND CORRECT...");
-		System.out.println();
 		System.out.print("STRATEGY: ");
 
 		// Cancel and correct strategy implementation
