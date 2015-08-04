@@ -1,7 +1,6 @@
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.util.ArrayList;
-import java.util.Scanner;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import com.ib.client.Contract;
 import com.ib.client.EClientSocket;
@@ -72,8 +71,11 @@ public class Socket {
 		for (int x = 0; x < Basket.getOrders().size(); x++) {
 			connection.placeOrder(Basket.getOrders().get(x).m_orderId, Basket
 					.getContracts().get(x), Basket.getOrders().get(x));
-			System.out.println("Order" + (Basket.getOrders().get(x).m_orderId)
-					+ " Transmitted");
+			DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
+			// get current date time with Date()
+			Date date = new Date();
+			System.out.println(dateFormat.format(date) + "Order"
+					+ (Basket.getOrders().get(x).m_orderId) + " Transmitted");
 		}
 		System.out.println();
 	}
