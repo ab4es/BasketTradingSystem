@@ -151,6 +151,8 @@ public class BasketOrderPanel extends JPanel {
 								errors += "OrderRef column may be incorrect. \n";
 							else if (i == 33)
 								errors += "Profile column may be incorrect. \n";
+							else if (i == 34)
+								errors += file.getName() + " uses incorrect number of fields for order(s)";
 						}
 						// Alert the system of the CSV error
 						JOptionPane.showMessageDialog(panel, errors, "Error",

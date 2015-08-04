@@ -42,136 +42,160 @@ public class IOHandler {
 
 		try {
 			br = new BufferedReader(new FileReader(file));
+			// Ensures the each order from the CSV has the correct number of
+			// fields
+			boolean correctLength = true;
 			int counter = 0;
 			while ((line = br.readLine()) != null) {
 				String[] order = line.split(cvsSplitBy);
-				// Ensures the first row of the CSV has the correct headers
-				if (counter == 0) {
-					if (!order[0].equalsIgnoreCase("Action"))
-						csvErrors.add(17);
-					if (!order[1].equalsIgnoreCase("Quantity"))
-						csvErrors.add(18);
-					if (!order[2].equalsIgnoreCase("Symbol"))
-						csvErrors.add(19);
-					if (!order[3].equalsIgnoreCase("SecType"))
-						csvErrors.add(20);
-					if (!order[4].equalsIgnoreCase("Exchange"))
-						csvErrors.add(21);
-					if (!order[5].equalsIgnoreCase("Currency"))
-						csvErrors.add(22);
-					if (!order[6].equalsIgnoreCase("TimeInForce"))
-						csvErrors.add(23);
-					if (!order[7].equalsIgnoreCase("OrderType"))
-						csvErrors.add(24);
-					if (!order[8].equalsIgnoreCase("LmtPrice"))
-						csvErrors.add(25);
-					if (!order[9].equalsIgnoreCase("BasketTag"))
-						csvErrors.add(26);
-					if (!order[10].equalsIgnoreCase("Account"))
-						csvErrors.add(27);
-					if (!order[11].equalsIgnoreCase("Group"))
-						csvErrors.add(28);
-					if (!order[12].equalsIgnoreCase("Method"))
-						csvErrors.add(29);
-					if (!order[13].equalsIgnoreCase("OrderCreationTime"))
-						csvErrors.add(30);
-					if (!order[14].equalsIgnoreCase("OutsideRth"))
-						csvErrors.add(31);
-					if (!order[15].equalsIgnoreCase("OrderRef"))
-						csvErrors.add(32);
-					if (!order[16].equalsIgnoreCase("Profile"))
-						csvErrors.add(33);
-				}
 
-				// Ensures the remaining rows of the CSV have the correct type
-				// of data
-				else {
-					String action = "";
-					if (order[0].equals("BUY") || order[0].equals("SELL")
-							|| order[0].equals("SSHORT"))
-						action = order[0];
-					else
-						csvErrors.add(0);
+				if (order.length != 17)
+					correctLength = false;
 
-					int quantity = Integer.parseInt(order[1]);
+				if (correctLength) {
+					// Ensures the first row of the CSV has the correct headers
+					if (counter == 0) {
+						if (!order[0].equalsIgnoreCase("Action"))
+							csvErrors.add(17);
+						if (!order[1].equalsIgnoreCase("Quantity"))
+							csvErrors.add(18);
+						if (!order[2].equalsIgnoreCase("Symbol"))
+							csvErrors.add(19);
+						if (!order[3].equalsIgnoreCase("SecType"))
+							csvErrors.add(20);
+						if (!order[4].equalsIgnoreCase("Exchange"))
+							csvErrors.add(21);
+						if (!order[5].equalsIgnoreCase("Currency"))
+							csvErrors.add(22);
+						if (!order[6].equalsIgnoreCase("TimeInForce"))
+							csvErrors.add(23);
+						if (!order[7].equalsIgnoreCase("OrderType"))
+							csvErrors.add(24);
+						if (!order[8].equalsIgnoreCase("LmtPrice"))
+							csvErrors.add(25);
+						if (!order[9].equalsIgnoreCase("BasketTag"))
+							csvErrors.add(26);
+						if (!order[10].equalsIgnoreCase("Account"))
+							csvErrors.add(27);
+						if (!order[11].equalsIgnoreCase("Group"))
+							csvErrors.add(28);
+						if (!order[12].equalsIgnoreCase("Method"))
+							csvErrors.add(29);
+						if (!order[13].equalsIgnoreCase("OrderCreationTime"))
+							csvErrors.add(30);
+						if (!order[14].equalsIgnoreCase("OutsideRth"))
+							csvErrors.add(31);
+						if (!order[15].equalsIgnoreCase("OrderRef"))
+							csvErrors.add(32);
+						if (!order[16].equalsIgnoreCase("Profile"))
+							csvErrors.add(33);
+					}
 
-					String symbol = order[2].replaceAll("\\s+", "");
+					// Ensures the remaining rows of the CSV have the correct
+					// type
+					// of data
+					else {
+						String action = "";
+						if (order[0].equals("BUY") || order[0].equals("SELL")
+								|| order[0].equals("SSHORT"))
+							action = order[0];
+						else
+							csvErrors.add(0);
 
-					String secType = "";
-					if (order[3].equals("STK") || order[3].equals("OPT")
-							|| order[3].equals("FUT") || order[3].equals("IND")
-							|| order[3].equals("FOP")
-							|| order[3].equals("CASH")
-							|| order[3].equals("BAG")
-							|| order[3].equals("NEWS"))
-						secType = order[3];
-					else
-						csvErrors.add(3);
+						int quantity = Integer.parseInt(order[1]);
 
-					String[] exchangeString = order[4].split("/");
-					String exchange = exchangeString[0];
-					String primaryExch = exchangeString[1];
+						String symbol = order[2].replaceAll("\\s+", "");
 
-					String currency = order[5];
+						String secType = "";
+						if (order[3].equals("STK") || order[3].equals("OPT")
+								|| order[3].equals("FUT")
+								|| order[3].equals("IND")
+								|| order[3].equals("FOP")
+								|| order[3].equals("CASH")
+								|| order[3].equals("BAG")
+								|| order[3].equals("NEWS"))
+							secType = order[3];
+						else
+							csvErrors.add(3);
 
-					String tif = "";
-					if (order[6].equals("DAY") || order[6].equals("GTC")
-							|| order[6].equals("IOC") || order[6].equals("GTD"))
-						tif = order[6];
-					else
-						csvErrors.add(6);
+						String[] exchangeString = order[4].split("/");
+						String exchange = exchangeString[0];
+						String primaryExch = exchangeString[1];
 
-					String orderType = order[7];
-					if (order[7].equals("LMT") || order[7].equals("MKT")
-							|| order[7].equals("MTL") || order[7].equals("STP")
-							|| order[7].equals("STP LMT")
-							|| order[7].equals("MIT") || order[7].equals("LIT")
-							|| order[7].equals("TRAIL")
-							|| order[7].equals("TRAIL LIMIT")
-							|| order[7].equals("TRAIL MIT")
-							|| order[7].equals("TRAIL LIT")
-							|| order[7].equals("REL") || order[7].equals("RPI")
-							|| order[7].equals("MOC") || order[7].equals("LOC")
-							|| order[7].equals("PEG BENCH"))
-						orderType = order[7];
-					else
-						csvErrors.add(7);
+						String currency = order[5];
 
-					double lmtPrice = Double.parseDouble(order[8]);
+						String tif = "";
+						if (order[6].equals("DAY") || order[6].equals("GTC")
+								|| order[6].equals("IOC")
+								|| order[6].equals("GTD"))
+							tif = order[6];
+						else
+							csvErrors.add(6);
 
-					String basketTag = order[9];
+						String orderType = order[7];
+						if (order[7].equals("LMT") || order[7].equals("MKT")
+								|| order[7].equals("MTL")
+								|| order[7].equals("STP")
+								|| order[7].equals("STP LMT")
+								|| order[7].equals("MIT")
+								|| order[7].equals("LIT")
+								|| order[7].equals("TRAIL")
+								|| order[7].equals("TRAIL LIMIT")
+								|| order[7].equals("TRAIL MIT")
+								|| order[7].equals("TRAIL LIT")
+								|| order[7].equals("REL")
+								|| order[7].equals("RPI")
+								|| order[7].equals("MOC")
+								|| order[7].equals("LOC")
+								|| order[7].equals("PEG BENCH"))
+							orderType = order[7];
+						else
+							csvErrors.add(7);
 
-					String account = order[10];
+						double lmtPrice = Double.parseDouble(order[8]);
 
-					String ocaGroup = order[11];
+						String basketTag = order[9];
 
-					int triggerMethod = 0;
-					if (!order[12].isEmpty())
-						triggerMethod = Integer.parseInt(order[12]);
+						String account = order[10];
 
-					String orderCreationTime = order[13];
+						String ocaGroup = order[11];
 
-					boolean outsideRth = false;
-					if (order[14].equals("TRUE") || order[14].equals("FALSE"))
-						outsideRth = Boolean.parseBoolean(order[14]);
-					else
-						csvErrors.add(14);
+						int triggerMethod = 0;
+						if (!order[12].isEmpty())
+							triggerMethod = Integer.parseInt(order[12]);
 
-					String orderRef = order[15];
+						String orderCreationTime = order[13];
 
-					String faProfile = order[16] + "1";
+						boolean outsideRth = false;
+						if (order[14].equals("TRUE")
+								|| order[14].equals("FALSE"))
+							outsideRth = Boolean.parseBoolean(order[14]);
+						else
+							csvErrors.add(14);
 
-					// Load Contract into Basket
-					Basket.addContract(symbol, secType, exchange, primaryExch,
-							currency);
-					// Load Order into Basket
-					Basket.addOrder(action, quantity, tif, orderType, lmtPrice,
-							account, ocaGroup, triggerMethod, outsideRth,
-							orderRef, faProfile);
+						String orderRef = order[15];
+
+						String faProfile = order[16] + "1";
+
+						// Load Contract into Basket
+						Basket.addContract(symbol, secType, exchange,
+								primaryExch, currency);
+						// Load Order into Basket
+						Basket.addOrder(action, quantity, tif, orderType,
+								lmtPrice, account, ocaGroup, triggerMethod,
+								outsideRth, orderRef, faProfile);
+					}
 				}
 				counter++;
 				Basket.setInitialBasketSize();
 			}
+
+			if (!correctLength) {
+				csvErrors.add(34);
+				System.out.println("No orders loaded due to formatting error!");
+				System.out.println();
+			}
+
 		} catch (FileNotFoundException e) {
 			System.out.println(e.toString());
 		} catch (IOException e) {
