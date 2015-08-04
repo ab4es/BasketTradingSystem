@@ -151,6 +151,14 @@ public class Basket {
 				}
 			}
 		}
+		// If the Order has been submitted, set its boolean m_submitted to true
+		if (status.equals("Submitted")) {
+			for (int x = 0; x < orders.size(); x++) {
+				if (orders.get(x).m_orderId == orderId) {
+					orders.get(x).m_submitted = true;
+				}
+			}
+		}
 	}
 
 	/*

@@ -106,6 +106,7 @@ public class Order {
 	public int m_askSize;
 	public int m_quantityRemaining;
 	public boolean m_filled;
+	public boolean m_submitted;
 
 	// main order fields
 	public int m_orderId;
@@ -308,6 +309,7 @@ public class Order {
 		m_askSize = 0;
 		m_quantityRemaining = m_totalQuantity;
 		m_filled = false;
+		m_submitted = false;
 	}
 
 	public boolean equals(Object p_other) {

@@ -8,7 +8,7 @@ import com.ib.client.EClientSocket;
 import com.ib.client.Order;
 
 public class Socket {
-	
+
 	// Initialize the EClientSocket using the CustomerWrapper
 	public static EClientSocket connection = new EClientSocket(
 			new CustomWrapper());
@@ -80,18 +80,26 @@ public class Socket {
 
 	// Cancel an order
 	public static void cancelOrder(Order order) {
-		while (!connection.cancelOrder(order.m_orderId))
-			System.out.println("");
-		;
+		// Only attempt to cancel the order after it has been submitted
+		if (order.m_submitted)
+			while (!connection.cancelOrder(order.m_orderId))
+				System.out.println("");
 	}
 
 	// Cancel all outstanding Orders
 	public static void cancelOrders() {
-		// Loop through all Orders and cancel each individually
-		for (int i = 0; i < Basket.getOrders().size(); i++) {
-			connection.cancelOrder(Basket.getOrders().get(i).m_orderId);
-			System.out.println("Order" + (Basket.getOrders().get(i).m_orderId)
-					+ " canceled");
+		// If orders exist to be cancelled
+		if (!Basket.getOrders().isEmpty()) {
+			// Loop through all Orders and cancel each individually
+			for (int i = 0; i < Basket.getOrders().size(); i++) {
+				cancelOrder(Basket.getOrders().get(i));
+				System.out.println("Order"
+						+ (Basket.getOrders().get(i).m_orderId) + " canceled");
+			}
+		}
+		// If there are no orders to be cancelled
+		else {
+			System.out.println("No orders to be cancelled");
 		}
 
 		// Clear all Orders, Contracts, and Broken Contracts
@@ -113,7 +121,7 @@ public class Socket {
 		long startTime = System.currentTimeMillis();
 		while ((order.m_bid == 0.0 || order.m_ask == 0.0
 				|| order.m_lastPrice == 0.0 || order.m_bidSize == 0 || order.m_askSize == 0)
-				&& (System.currentTimeMillis() - startTime) < 3000) {
+				&& (System.currentTimeMillis() - startTime) < 5000) {
 			System.out.print("");
 		}
 
