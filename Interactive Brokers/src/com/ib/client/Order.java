@@ -447,4 +447,32 @@ public class Order {
 
 		return true;
 	}
+
+	// Returns true if the order types and corresponding spreads are the
+	// different
+	public boolean isNewSpread(Order newOrder) {
+		// If both orders are limit orders, check to see if their limit prices
+		// are the same
+		if (this.m_orderType.equals("LMT")
+				&& newOrder.m_orderType.equals("LMT")) {
+			if (this.m_lmtPrice != newOrder.m_lmtPrice) {
+				System.out.println(this.m_lmtPrice + " != " + newOrder.m_lmtPrice);
+				return true;
+			}
+			else {
+				System.out.println(this.m_lmtPrice + " == " + newOrder.m_lmtPrice);
+				return false;
+			}
+		}
+		// If both orders are market orders, they are the same
+		else if (this.m_orderType.equals("MKT")
+				&& newOrder.m_orderType.equals("MKT")) {
+			System.out.println("MKT orders");
+			System.out.println(this.m_lmtPrice + " == " + newOrder.m_lmtPrice);
+			return false;
+		}
+		// Otherwise, and for any other order types, the two orders are not the
+		// same
+		return true;
+	}
 }

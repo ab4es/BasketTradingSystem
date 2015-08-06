@@ -66,6 +66,28 @@ public class Socket {
 		return !isConn;
 	}
 
+	// Transmit a specific order from all the outstanding Orders
+	public static void transmitOrder(Order order) {
+		for (int i = 0; i < Basket.getOrders().size(); i++) {
+			if (Basket.getOrders().get(i).m_orderId == order.m_orderId) {
+				connection
+						.placeOrder(Basket.getOrders().get(i).m_orderId, Basket
+								.getContracts().get(i),
+								Basket.getOrders().get(i));
+				DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
+				// get current date time with Date()
+				Date date = new Date();
+				System.out.println(dateFormat.format(date) + " "
+						+ Basket.getContracts().get(i).m_symbol
+						+ " Order Transmitted");
+			}
+			else {
+				System.out.println("Order not found!");
+			}
+		}
+		System.out.println();
+	}
+
 	// Transmit all outstanding Orders
 	public static void transmitOrders() {
 		for (int x = 0; x < Basket.getOrders().size(); x++) {
@@ -74,8 +96,9 @@ public class Socket {
 			DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
 			// get current date time with Date()
 			Date date = new Date();
-			System.out.println(dateFormat.format(date) + "Order"
-					+ (Basket.getOrders().get(x).m_orderId) + " Transmitted");
+			System.out.println(dateFormat.format(date) + " "
+					+ Basket.getContracts().get(x).m_symbol
+					+ " Order Transmitted");
 		}
 		System.out.println();
 	}
@@ -95,8 +118,12 @@ public class Socket {
 			// Loop through all Orders and cancel each individually
 			for (int i = 0; i < Basket.getOrders().size(); i++) {
 				cancelOrder(Basket.getOrders().get(i));
-				System.out.println("Order"
-						+ (Basket.getOrders().get(i).m_orderId) + " canceled");
+				DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
+				// get current date time with Date()
+				Date date = new Date();
+				System.out.println(dateFormat.format(date) + " "
+						+ Basket.getContracts().get(i).m_symbol
+						+ " Order Cancelled");
 			}
 		}
 		// If there are no orders to be cancelled

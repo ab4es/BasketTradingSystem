@@ -1,5 +1,8 @@
 import java.io.File;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 
 import com.ib.client.Contract;
 import com.ib.client.Order;
@@ -125,15 +128,19 @@ public class Basket {
 	public static void updateOrderStatus(int orderId, String status,
 			int filled, int remaining, double avgFillPrice, int permId,
 			int parentId, double lastFillPrice, int clientId, String whyHeld) {
-		// If the Order has been filled, set its boolean m_filled to true
+		// If the Order has been filled, set its boolean m_filled to true and
+		// remove it from the list of Orders and Contracts
 		if (status.equals("Filled")) {
 			for (int x = 0; x < orders.size(); x++) {
 				if (orders.get(x).m_orderId == orderId
 						&& !orders.get(x).m_filled) {
 					orders.get(x).m_filled = true;
-					System.out.println("Order " + orders.get(x).m_orderId
-							+ " filled");
-					System.out.println();
+					DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
+					// get current date time with Date()
+					Date date = new Date();
+					System.out.println(dateFormat.format(date) + " "
+							+ Basket.getContracts().get(x).m_symbol
+							+ " Order Filled");
 				}
 			}
 		}
@@ -246,26 +253,19 @@ public class Basket {
 				// If the Order has not been filled yet, it can be canceled and
 				// corrected and so it is added to the temporary Order ArrayList
 				if (!orders.get(i).m_filled) {
-					tempContracts.add(contracts.get(i));
-					tempOrders.add(orders.get(i));
-					// Cancel that Order as it will soon be corrected with a
-					// more market accurate spread
-					Socket.cancelOrder(orders.get(i));
-					System.out.println("Order " + (orders.get(i).m_orderId)
-							+ " canceled");
-					System.out.println();
+					tempContracts.add(Basket.getContracts().get(i));
+					tempOrders.add(Basket.getOrders().get(i));
 				}
-				Socket.cancelOrder(orders.get(i));
 			} else {
-				Socket.cancelOrder(orders.get(i));
-				contracts.remove(i);
-				orders.remove(i);
+				System.out.println(contracts.get(i).m_symbol
+						+ " Order cannot obtain market data");
 			}
 		}
 
-		Basket.clearContracts();
-		Basket.clearOrders();
-
+		// Clear all the Contracts and Orders so the unfilled Contracts and
+		// Orders can replace them
+		clearContracts();
+		clearOrders();
 		for (int i = 0; i < tempOrders.size(); i++) {
 			Contract contract = tempContracts.get(i);
 			Order order = tempOrders.get(i);

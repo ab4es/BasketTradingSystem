@@ -22,9 +22,20 @@ public class Strategy {
 							.getOrders().get(i), Basket.getContracts().get(i));
 					// If market data can obtained
 					if (hasData) {
-						Strategy.cancelAndCorrectSpreadStrategy(Basket
-								.getOrders().get(i),
-								Basket.getContracts().get(i));
+						// If the Order will change, cancel and correct it,
+						// otherwise let it be
+						if (Basket
+								.getOrders()
+								.get(i)
+								.isNewSpread(
+										Strategy.calculateCancelAndCorrectSpread(Basket
+												.getOrders().get(i)))) {
+							Socket.cancelOrder(Basket.getOrders().get(i));
+							Strategy.cancelAndCorrectSpreadStrategy(Basket
+									.getOrders().get(i), Basket.getContracts()
+									.get(i));
+							Socket.transmitOrder(Basket.getOrders().get(i));
+						}
 						Socket.cancelMarketData(Basket.getOrders().get(i));
 					}
 					// If market data cannot be obtained
@@ -32,6 +43,9 @@ public class Strategy {
 						Socket.cancelMarketData(Basket.getOrders().get(i));
 						Basket.getContracts().remove(i);
 						Basket.getOrders().remove(i);
+						System.out
+								.println(Basket.getContracts().get(i).m_symbol
+										+ " Order not corrected because market data cannot be obtained");
 					}
 				}
 			} else {
@@ -52,17 +66,19 @@ public class Strategy {
 					Strategy.normalSpreadStrategy(Basket.getOrders().get(i),
 							Basket.getContracts().get(i));
 					Socket.cancelMarketData(Basket.getOrders().get(i));
+					Socket.transmitOrder(Basket.getOrders().get(i));
 				}
 				// If market data cannot be obtained
 				else {
 					Socket.cancelMarketData(Basket.getOrders().get(i));
 					Basket.getContracts().remove(i);
 					Basket.getOrders().remove(i);
+					System.out
+							.println(Basket.getContracts().get(i).m_symbol
+									+ " Order not corrected because market data cannot be obtained");
 				}
 			}
 		}
-
-		Socket.transmitOrders();
 	}
 
 	// Modifies Order spread to leverage the relative bid-ask spread size so
@@ -126,6 +142,7 @@ public class Strategy {
 
 		// System output for additional console information
 		System.out.println("PRICE: " + order.m_lastPrice);
+		System.out.println("LMT PRICE: " + order.m_lmtPrice);
 		System.out.println("BID: " + order.m_bid);
 		System.out.println("ASK: " + order.m_ask);
 		System.out.println("MID: " + lmtMid);
@@ -143,8 +160,7 @@ public class Strategy {
 	// leverage the relative bid-ask spread size so as to shave the spread costs
 	public static void cancelAndCorrectSpreadStrategy(Order order,
 			Contract contract) {
-
-		// Create variable needed for the strategy
+		// Create variables needed for the strategy
 		double bid = order.m_bid;
 		double ask = order.m_ask;
 		double price = order.m_lastPrice;
@@ -226,8 +242,55 @@ public class Strategy {
 		System.out.println("RATIO: " + ratio);
 		System.out.println();
 
-		// Replace or "update" the Orders with this calculated spread
 		Basket.replaceOrder(order);
+	}
+
+	// Used to calculate the spread for an Order but will not actually change
+	// the order's spread
+	// Used to check if an order should be left as is when the cancel and
+	// correct method is run
+	public static Order calculateCancelAndCorrectSpread(Order order) {
+		// Create variables needed for the strategy
+		double bid = order.m_bid;
+		double ask = order.m_ask;
+		double price = order.m_lastPrice;
+		double lmtPrice = order.m_lmtPrice;
+		int bidSize = order.m_bidSize;
+		int askSize = order.m_askSize;
+		double spread = ask - bid;
+		double lmtMid = Math.round(((bid + ask) / 2) * 100.0) / 100.0;
+		double ratio = (float) bidSize / askSize;
+
+		// Cancel and correct strategy implementation
+		if ((order.m_action.equals("BUY") && lmtPrice >= bid)
+				|| (order.m_action.equals("SELL") && lmtPrice <= ask)) {
+			if (spread <= 0.01 && price > 5) {
+				order.m_orderType = "MKT";
+			}
+		} else if (spread <= 0.01) {
+			order.m_orderType = "MKT";
+		} else if (spread > 0.01 && spread <= 0.02) {
+			if (price < 5) {
+				order.m_lmtPrice = lmtMid;
+			} else {
+				order.m_orderType = "MKT";
+			}
+		} else if (spread > 0.02 && spread <= 0.05) {
+			if (ratio > 10 && order.m_action.equalsIgnoreCase("BUY")) {
+				order.m_orderType = "MKT";
+			} else if (ratio < 0.1 && order.m_action.equalsIgnoreCase("SELL")) {
+				order.m_orderType = "MKT";
+			} else {
+				order.m_lmtPrice = lmtMid;
+			}
+		} else if (spread > 0.05) {
+			String outerMsg = "spread > 0.05";
+			order.m_lmtPrice = lmtMid;
+		} else {
+			order.m_lmtPrice = lmtMid;
+		}
+
+		return order;
 	}
 
 	public static void main(String[] args) {
