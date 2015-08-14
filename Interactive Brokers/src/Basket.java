@@ -135,6 +135,8 @@ public class Basket {
 				if (orders.get(x).m_orderId == orderId
 						&& !orders.get(x).m_filled) {
 					orders.get(x).m_filled = true;
+					// orders.remove(x);
+					// contracts.remove(x);
 					DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
 					// get current date time with Date()
 					Date date = new Date();

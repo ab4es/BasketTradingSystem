@@ -1,3 +1,5 @@
+import java.sql.SQLException;
+
 import com.ib.client.*;
 
 public class CustomWrapper implements EWrapper {
@@ -37,14 +39,14 @@ public class CustomWrapper implements EWrapper {
 	}
 
 	@Override
-	public void tickPrice(int tickerId, int field, double price,
-			int canAutoExecute) {
-		Basket.updateBidAskLastPrice(tickerId, field, price, canAutoExecute);
+	public void tickPrice(int conId, int field, double price, int canAutoExecute)
+			throws SQLException {
+		Database.updateBidAskLastPrice(conId, field, price);
 	}
 
 	@Override
-	public void tickSize(int tickerId, int field, int size) {
-		Basket.updateBidAskSizes(tickerId, field, size);
+	public void tickSize(int conId, int field, int size) throws SQLException {
+		Database.updateBidAskSizes(conId, field, size);
 	}
 
 	@Override
@@ -79,10 +81,8 @@ public class CustomWrapper implements EWrapper {
 	@Override
 	public void orderStatus(int orderId, String status, int filled,
 			int remaining, double avgFillPrice, int permId, int parentId,
-			double lastFillPrice, int clientId, String whyHeld) {
-		Basket.updateOrderStatus(orderId, status, filled, remaining,
-				avgFillPrice, permId, parentId, lastFillPrice, clientId,
-				whyHeld);
+			double lastFillPrice, int clientId, String whyHeld) throws SQLException {
+		Database.updateOrderStatus(orderId, remaining);
 
 	}
 
@@ -262,7 +262,7 @@ public class CustomWrapper implements EWrapper {
 
 	@Override
 	public void commissionReport(CommissionReport commissionReport) {
-		//basketTrader.updatePNL(commissionReport);
+		// basketTrader.updatePNL(commissionReport);
 
 	}
 

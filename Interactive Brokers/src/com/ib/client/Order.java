@@ -5,13 +5,16 @@ package com.ib.client;
 
 import java.util.Vector;
 
+import org.joda.money.Money;
+
 public class Order {
 	@Override
 	public String toString() {
-		return "Order [m_orderId=" + m_orderId + ", m_clientId=" + m_clientId
-				+ ", m_permId=" + m_permId + ", m_action=" + m_action
-				+ ", m_totalQuantity=" + m_totalQuantity + ", m_orderType="
-				+ m_orderType + ", m_bid=" + m_bid + ", m_ask=" + m_ask
+		return "Order [m_orderId=" + m_orderId + ", m_conId=" + m_conId
+				+ ", m_filled=" + m_filled + ", m_submitted=" + m_submitted
+				+ ", m_clientId=" + m_clientId + ", m_permId=" + m_permId
+				+ ", m_action=" + m_action + ", m_totalQuantity="
+				+ m_totalQuantity + ", m_orderType=" + m_orderType
 				+ ", m_lmtPrice=" + m_lmtPrice + ", m_auxPrice=" + m_auxPrice
 				+ ", m_tif=" + m_tif + ", m_activeStartTime="
 				+ m_activeStartTime + ", m_activeStopTime=" + m_activeStopTime
@@ -99,12 +102,7 @@ public class Order {
 	final public static String EMPTY_STR = "";
 
 	// Basket Order variables
-	public double m_bid;
-	public double m_ask;
-	public double m_lastPrice;
-	public int m_bidSize;
-	public int m_askSize;
-	public int m_quantityRemaining;
+	public int m_conId;
 	public boolean m_filled;
 	public boolean m_submitted;
 
@@ -115,7 +113,7 @@ public class Order {
 	public String m_action;
 	public int m_totalQuantity;
 	public String m_orderType;
-	public double m_lmtPrice;
+	public Money m_lmtPrice;
 	public double m_auxPrice;
 
 	// extended order fields
@@ -253,7 +251,7 @@ public class Order {
 	public Vector<TagValue> m_orderMiscOptions;
 
 	public Order() {
-		m_lmtPrice = Double.MAX_VALUE;
+		m_lmtPrice = Money.parse("USD 0.0");
 		m_auxPrice = Double.MAX_VALUE;
 		m_activeStartTime = EMPTY_STR;
 		m_activeStopTime = EMPTY_STR;
@@ -302,12 +300,6 @@ public class Order {
 		m_scaleTable = EMPTY_STR;
 		m_whatIf = false;
 		m_notHeld = false;
-		m_bid = 0.0;
-		m_ask = 0.0;
-		m_lastPrice = 0.0;
-		m_bidSize = 0;
-		m_askSize = 0;
-		m_quantityRemaining = m_totalQuantity;
 		m_filled = false;
 		m_submitted = false;
 	}
@@ -456,11 +448,12 @@ public class Order {
 		if (this.m_orderType.equals("LMT")
 				&& newOrder.m_orderType.equals("LMT")) {
 			if (this.m_lmtPrice != newOrder.m_lmtPrice) {
-				System.out.println(this.m_lmtPrice + " != " + newOrder.m_lmtPrice);
+				// System.out.println(this.m_lmtPrice + " != " +
+				// newOrder.m_lmtPrice);
 				return true;
-			}
-			else {
-				System.out.println(this.m_lmtPrice + " == " + newOrder.m_lmtPrice);
+			} else {
+				// System.out.println(this.m_lmtPrice + " == " +
+				// newOrder.m_lmtPrice);
 				return false;
 			}
 		}

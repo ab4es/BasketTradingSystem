@@ -5,6 +5,8 @@ package com.ib.client;
 
 import java.util.Vector;
 
+import org.joda.money.Money;
+
 public class Contract implements Cloneable {
 
 	@Override
@@ -13,7 +15,9 @@ public class Contract implements Cloneable {
 				+ ", m_secType=" + m_secType + ", m_expiry=" + m_expiry
 				+ ", m_strike=" + m_strike + ", m_right=" + m_right
 				+ ", m_multiplier=" + m_multiplier + ", m_exchange="
-				+ m_exchange + ", m_currency=" + m_currency
+				+ m_exchange + ", m_bid=" + m_bid + ", m_ask=" + m_ask
+				+ ", m_lastPrice=" + m_lastPrice + ", m_bidSize=" + m_bidSize
+				+ ", m_askSize=" + m_askSize + ", m_currency=" + m_currency
 				+ ", m_localSymbol=" + m_localSymbol + ", m_tradingClass="
 				+ m_tradingClass + ", m_primaryExch=" + m_primaryExch
 				+ ", m_includeExpired=" + m_includeExpired + ", m_secIdType="
@@ -32,6 +36,13 @@ public class Contract implements Cloneable {
     public String m_multiplier;
     public String m_exchange;
 
+    public Money m_bid;
+    public Money m_ask;
+    public Money m_lastPrice;
+    public int m_bidSize;
+    public int m_askSize;
+    
+    
     public String m_currency;
     public String m_localSymbol;
     public String m_tradingClass;
@@ -47,10 +58,13 @@ public class Contract implements Cloneable {
 
     // delta neutral
     public UnderComp m_underComp;
+    
 
     public Contract() {
-    	m_conId = 0;
+    	m_conId = -1;
         m_strike = 0;
+        m_bidSize = 0;
+        m_askSize = 0;
         m_includeExpired = false;
     }
 

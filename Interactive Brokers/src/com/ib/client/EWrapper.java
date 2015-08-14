@@ -3,13 +3,15 @@
 
 package com.ib.client;
 
+import java.sql.SQLException;
+
 public interface EWrapper extends AnyWrapper {
 
     ///////////////////////////////////////////////////////////////////////
     // Interface methods
     ///////////////////////////////////////////////////////////////////////
-    void tickPrice( int tickerId, int field, double price, int canAutoExecute);
-    void tickSize( int tickerId, int field, int size);
+    void tickPrice( int tickerId, int field, double price, int canAutoExecute) throws SQLException;
+    void tickSize( int tickerId, int field, int size) throws SQLException;
     void tickOptionComputation( int tickerId, int field, double impliedVol,
     		double delta, double optPrice, double pvDividend,
     		double gamma, double vega, double theta, double undPrice);
@@ -20,7 +22,7 @@ public interface EWrapper extends AnyWrapper {
 			String futureExpiry, double dividendImpact, double dividendsToExpiry);
     void orderStatus( int orderId, String status, int filled, int remaining,
             double avgFillPrice, int permId, int parentId, double lastFillPrice,
-            int clientId, String whyHeld);
+            int clientId, String whyHeld) throws SQLException;
     void openOrder( int orderId, Contract contract, Order order, OrderState orderState);
     void openOrderEnd();
     void updateAccountValue(String key, String value, String currency, String accountName);

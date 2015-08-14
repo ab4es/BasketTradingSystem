@@ -5,6 +5,7 @@ package com.ib.client;
 
 import java.io.DataInputStream;
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.Vector;
 
 public class EReader extends Thread {
@@ -91,8 +92,9 @@ public class EReader extends Thread {
         }
     }
 
-    /** Overridden in subclass. */
-    protected boolean processMsg(int msgId) throws IOException{
+    /** Overridden in subclass. 
+     * @throws SQLException */
+    protected boolean processMsg(int msgId) throws IOException, SQLException{
         if( msgId == -1) return false;
 
         switch( msgId) {
