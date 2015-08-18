@@ -269,10 +269,7 @@ public class Strategy {
 	public static boolean needsNewSpread(Order order, Contract contract) {
 		Order tmpOrder = order;
 		Contract tmpContract = contract;
-		
-		System.out.println("org" + order);
-		System.out.println();
-		
+
 		// Create variable needed for the strategy
 		BigDecimal bid = new BigDecimal(tmpContract.m_bid.toString());
 		BigDecimal ask = new BigDecimal(tmpContract.m_ask.toString());
@@ -289,99 +286,58 @@ public class Strategy {
 		BigDecimal ratio = BigDecimal.valueOf(bidSize).divide(
 				BigDecimal.valueOf(askSize), 2, RoundingMode.HALF_UP);
 
-		System.out.println(tmpContract.m_symbol);
-		System.out.println("====");
-		System.out.print("STRATEGY: ");
-
 		// Cancel and correct strategy implementation
-		if (tmpOrder.m_orderType.equals("LMT")) {
-			if ((tmpOrder.m_action.equals("BUY") && tmpOrder.m_lmtPrice
-					.compareTo(bid) >= 0)
-					|| (tmpOrder.m_action.equals("SELL") && tmpOrder.m_lmtPrice
-							.compareTo(ask) <= 0)) {
-				String outerMsg = "";
-				if (tmpOrder.m_action.equals("BUY"))
-					outerMsg += "BUY & lmtPrice >= bid";
-				else
-					outerMsg += "SELL & lmtPrice <= ask";
-				if ((spread.compareTo(new BigDecimal("0.01")) <= 0)
-						&& price.compareTo(new BigDecimal("5")) > 0) {
-					tmpOrder.m_orderType = "MKT";
-					System.out.println("MKT[" + outerMsg
-							+ " & spread <= 0.01 & price > 5]");
-				} else {
-					System.out.println("HOLD[" + outerMsg
-							+ " & (spread > 0.01 OR price <= 5)]");
-				}
+		if ((tmpOrder.m_orderType.equals("LMT")
+				&& tmpOrder.m_action.equals("BUY") && tmpOrder.m_lmtPrice
+				.compareTo(bid) >= 0)
+				|| (tmpOrder.m_orderType.equals("LMT")
+						&& tmpOrder.m_action.equals("SELL") && tmpOrder.m_lmtPrice
+						.compareTo(ask) <= 0)) {
+			if ((spread.compareTo(new BigDecimal("0.01")) <= 0)
+					&& price.compareTo(new BigDecimal("5")) > 0) {
+				tmpOrder.m_orderType = "MKT";
 			}
 		} else if (spread.compareTo(new BigDecimal("0.01")) <= 0) {
-			String outerMsg = "spread <= 0.01";
 			tmpOrder.m_orderType = "MKT";
-			System.out.println("MKT[" + outerMsg + "]");
 		} else if ((spread.compareTo(new BigDecimal("0.01")) > 0)
 				&& (spread.compareTo(new BigDecimal("0.02")) <= 0)) {
-			String outerMsg = "0.01 < spread <= 0.02";
 			if (price.compareTo(new BigDecimal("5")) < 0) {
 				tmpOrder.m_lmtPrice = lmtMid;
-				System.out.println("LMT MID[" + outerMsg + " & price < 5]");
 			} else {
 				tmpOrder.m_orderType = "MKT";
-				System.out.println("MKT[" + outerMsg + " & price <= 5]");
 			}
 		} else if ((spread.compareTo(new BigDecimal("0.02")) > 0)
 				&& (spread.compareTo(new BigDecimal("0.05")) <= 0)) {
-			String outerMsg = "0.02 < spread <= 0.05";
 			if ((ratio.compareTo(new BigDecimal("10")) > 0)
 					&& tmpOrder.m_action.equalsIgnoreCase("BUY")) {
 				tmpOrder.m_orderType = "MKT";
-				System.out.println("MKT[" + outerMsg
-						+ " & ratio > 10 & BUY tmpOrder]");
 			} else if ((ratio.compareTo(new BigDecimal("0.1")) < 0)
 					&& tmpOrder.m_action.equalsIgnoreCase("SELL")) {
 				tmpOrder.m_orderType = "MKT";
-				System.out.println("MKT[" + outerMsg
-						+ " & ratio < 10 & SELL tmpOrder]");
 			} else {
 				tmpOrder.m_lmtPrice = lmtMid;
-				System.out
-						.println("LMT MID["
-								+ outerMsg
-								+ " & NOT(ratio > 10 & BUY tmpOrder) & NOT(ratio < 10 & SELL tmpOrder)]");
 			}
 		} else if (spread.compareTo(new BigDecimal("0.05")) > 0) {
-			String outerMsg = "spread > 0.05";
 			tmpOrder.m_lmtPrice = lmtMid;
-			System.out.println("LMT MID[" + outerMsg + "]");
 		} else {
 			tmpOrder.m_lmtPrice = lmtMid;
-			System.out.println("LMT MID");
 		}
 
-		// System output for additional console information
-		if (tmpOrder.m_orderType.equals("MKT")) {
-			System.out.println("TRANSMIT PRICE: (MKT) " + price.toString());
-		} else {
-			System.out.println("TRANSMIT PRICE: (LMT) " + tmpOrder.m_lmtPrice);
-		}
-		System.out.println("LAST PRICE: " + price.toString());
-		System.out.println("BID: " + bid.toString());
-		System.out.println("ASK: " + ask.toString());
-		System.out.println("MID: " + lmtMid.toString());
-		System.out.println("SPREAD: " + spread.toString());
-		System.out.println("BID SIZE: " + bidSize);
-		System.out.println("ASK SIZE: " + askSize);
-		System.out.println("RATIO: " + ratio.toString());
-		System.out.println();
-		
+		// Is the new spread different
 		if (order.m_orderType.equals(tmpOrder.m_orderType)) {
-			if (order.m_orderType.equals("MKT"))
+			if (order.m_orderType.equals("MKT")) {
+				System.out.println(false);
 				return false;
-			else if (order.m_orderType.equals("LMT")) {
-				if (order.m_lmtPrice != tmpOrder.m_lmtPrice)
+			} else if (order.m_orderType.equals("LMT")) {
+				if (order.m_lmtPrice != tmpOrder.m_lmtPrice) {
+					System.out.println(true);
 					return true;
+				}
+				System.out.println(false);
 				return false;
 			}
 		}
+		System.out.println(true);
 		return true;
 	}
 
