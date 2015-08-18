@@ -1,9 +1,11 @@
+import java.awt.Color;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.sql.SQLException;
 import java.util.ArrayList;
 
 import javax.swing.JButton;
@@ -11,10 +13,9 @@ import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.filechooser.FileNameExtensionFilter;
-
-import com.ib.client.Contract;
 import javax.swing.JTable;
+import javax.swing.filechooser.FileNameExtensionFilter;
+import javax.swing.table.DefaultTableModel;
 
 public class BasketOrderPanel extends JPanel {
 	JFileChooser fileChooser;
@@ -31,9 +32,10 @@ public class BasketOrderPanel extends JPanel {
 	JLabel lblCancelBasketOrder;
 	JLabel lblCancelAndCorrect;
 	JLabel lblRealizedPNL;
-	JTable table;
+	JTable PnLTable;
 
 	int basketOrderLoads = 0;
+	boolean fileChosen = false;
 
 	/**
 	 * Create the panel.
@@ -59,6 +61,8 @@ public class BasketOrderPanel extends JPanel {
 
 		this.createCancelAndCorrectButton();
 		this.createCancelAndCorrectLabel();
+
+		this.createPnLTable();
 	}
 
 	public void createLoadBasketButton() {
@@ -67,12 +71,11 @@ public class BasketOrderPanel extends JPanel {
 		btnLoadBasket.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				// Harvey's directory of choice
-				fileChooser = new JFileChooser("C:\\Bbrg\\Trades");
+				// fileChooser = new JFileChooser("C:\\Bbrg\\Trades");
 
 				// Aditya's directory of choice
-				// fileChooser = new
-				// JFileChooser(System.getProperty("user.home")
-				// + "/Desktop");
+				fileChooser = new JFileChooser(System.getProperty("user.home")
+						+ "/Downloads");
 
 				// Limit files selected to only CSV files
 				FileNameExtensionFilter filter = new FileNameExtensionFilter(
@@ -85,8 +88,12 @@ public class BasketOrderPanel extends JPanel {
 				if (result == JFileChooser.APPROVE_OPTION) {
 					file = fileChooser.getSelectedFile();
 
-					// Load the orders into a new Basket
-					Basket basket = new Basket(file);
+					// Load the orders
+					try {
+						IOHandler.readCSV(file);
+					} catch (SQLException e1) {
+						e1.printStackTrace();
+					}
 
 					// This will hold any errors from the CSV
 					ArrayList<Integer> csvErrors = IOHandler.getCSVErrors();
@@ -159,6 +166,7 @@ public class BasketOrderPanel extends JPanel {
 						// Alert the system of the CSV error
 						JOptionPane.showMessageDialog(panel, errors, "Error",
 								JOptionPane.ERROR_MESSAGE);
+						fileChosen = true;
 					}
 				} else {
 					lblLoadBasket.setText("Basket Order Not Selected");
@@ -179,29 +187,30 @@ public class BasketOrderPanel extends JPanel {
 		btnTransmitBasketOrder.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				// Run the normal spread strategy
-				Strategy.runSpreadStrategy(false);
-
-				// Keep a list of any broken contracts
-				ArrayList<Contract> brokenContracts = Basket
-						.getBrokenContracts();
-
-				// If there are no broken Contracts
-				if (brokenContracts.isEmpty()) {
-					lblTransmitBasketOrder.setText("Basket Order ("
-							+ file.getName() + ")  Transmitted");
+				try {
+					Strategy.runSpreadStrategy(false);
+				} catch (SQLException e1) {
+					e1.printStackTrace();
 				}
-				// If broken Contracts exist
-				else {
-					final JPanel panel = new JPanel();
-					String errors = "Market data could not be retrieved for the following stock(s): \n";
-					for (Contract c : brokenContracts)
-						errors += c.m_symbol + "\n";
-					System.out.println(errors);
 
-					// Alert the system which contracts are broken
-					JOptionPane.showMessageDialog(panel, errors, "Error",
-							JOptionPane.ERROR_MESSAGE);
-				}
+				/*
+				 * // Keep a list of any broken contracts ArrayList<Contract>
+				 * brokenContracts = Basket .getBrokenContracts();
+				 * 
+				 * // If there are no broken Contracts if
+				 * (brokenContracts.isEmpty()) {
+				 * lblTransmitBasketOrder.setText("Basket Order (" +
+				 * file.getName() + ")  Transmitted"); } // If broken Contracts
+				 * exist else { final JPanel panel = new JPanel(); String errors
+				 * =
+				 * "Market data could not be retrieved for the following stock(s): \n"
+				 * ; for (Contract c : brokenContracts) errors += c.m_symbol +
+				 * "\n"; System.out.println(errors);
+				 * 
+				 * // Alert the system which contracts are broken
+				 * JOptionPane.showMessageDialog(panel, errors, "Error",
+				 * JOptionPane.ERROR_MESSAGE); }
+				 */
 			}
 		});
 
@@ -218,11 +227,18 @@ public class BasketOrderPanel extends JPanel {
 		btnCancelBasketOrder.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				// Cancel all outstanding errors
-				Socket.cancelOrders();
+				try {
+					Socket.cancelOrders();
+				} catch (SQLException e1) {
+					e1.printStackTrace();
+				}
 				lblLoadBasket.setText("No Basket Loaded");
 				lblTransmitBasketOrder.setText("No Basket Order Transmitted");
-				lblCancelBasketOrder.setText("Basket Order (" + file.getName()
-						+ ")  Canceled");
+				if (fileChosen)
+					lblCancelBasketOrder.setText("Basket Order ("
+							+ file.getName() + ")  Canceled");
+				else
+					lblCancelBasketOrder.setText("No Basket Loaded");
 			}
 		});
 
@@ -266,9 +282,16 @@ public class BasketOrderPanel extends JPanel {
 		btnCancelAndCorrect.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				// Cancel and correct all outstanding Orders
-				Strategy.runSpreadStrategy(true);
-				lblCancelAndCorrect.setText("Basket Order (" + file.getName()
-						+ ")  Cancelled and Corrected");
+				try {
+					Strategy.runSpreadStrategy(true);
+				} catch (SQLException e1) {
+					e1.printStackTrace();
+				}
+				if (fileChosen)
+					lblCancelAndCorrect.setText("Basket Order ("
+							+ file.getName() + ")  Canceled");
+				else
+					lblCancelAndCorrect.setText("No Basket Loaded");
 			}
 		});
 
@@ -288,19 +311,21 @@ public class BasketOrderPanel extends JPanel {
 		add(lblCancelAndCorrect, gbc_lblCancelAndCorrect);
 	}
 
-	public void createOrdersTable(Object[][] rowData, String[] columnNames) {
-		if (basketOrderLoads > 0) {
-			table.clearSelection();
-			table.repaint();
-		}
-		table.repaint();
-		table = new JTable(rowData, columnNames);
-		GridBagConstraints gbc_table = new GridBagConstraints();
-		gbc_table.gridwidth = 5;
-		gbc_table.insets = new Insets(0, 0, 5, 5);
-		gbc_table.fill = GridBagConstraints.HORIZONTAL;
-		gbc_table.gridx = 1;
-		gbc_table.gridy = 7;
-		add(table, gbc_table);
+	public void createPnLTable() {
+		DefaultTableModel model = new DefaultTableModel();
+		model.addColumn("");
+		model.addColumn("Price Ordered");
+		model.addColumn("Price Executed");
+		model.addColumn("PnL");
+		PnLTable = new JTable(model);
+		PnLTable.setBackground(Color.WHITE);
+		GridBagConstraints gbc_PnLTable = new GridBagConstraints();
+		gbc_PnLTable.gridwidth = 5;
+		gbc_PnLTable.insets = new Insets(0, 0, 5, 5);
+		gbc_PnLTable.fill = GridBagConstraints.BOTH;
+		gbc_PnLTable.gridx = 1;
+		gbc_PnLTable.gridy = 7;
+		add(PnLTable, gbc_PnLTable);
 	}
+
 }

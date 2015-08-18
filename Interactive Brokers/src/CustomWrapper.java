@@ -81,9 +81,26 @@ public class CustomWrapper implements EWrapper {
 	@Override
 	public void orderStatus(int orderId, String status, int filled,
 			int remaining, double avgFillPrice, int permId, int parentId,
-			double lastFillPrice, int clientId, String whyHeld) throws SQLException {
-		Database.updateOrderStatus(orderId, remaining);
-
+			double lastFillPrice, int clientId, String whyHeld)
+			throws SQLException {
+		/*
+		 * System.out.println("orderId: " + orderId);
+		 * System.out.println("status: " + status);
+		 * System.out.println("filled: " + filled);
+		 * System.out.println("remaining: " + remaining);
+		 * System.out.println("avgFillPrice: " + avgFillPrice);
+		 * System.out.println("permId: " + permId);
+		 * System.out.println("parentId: " + parentId);
+		 * System.out.println("lastFillPrice: " + lastFillPrice);
+		 * System.out.println("clientid" + clientId);
+		 * System.out.println("why held: " + whyHeld);
+		 * System.out.println(Database.getTotalQuantity(orderId) + " vs. " +
+		 * remaining); System.out.println();
+		 */
+		if (Database.getTotalQuantity(orderId) != remaining
+				&& !status.equals("Cancelled")) {
+			Database.updateOrderStatus(orderId, remaining);
+		}
 	}
 
 	@Override

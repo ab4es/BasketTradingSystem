@@ -1,11 +1,10 @@
-/* Copyright (C) 2013 Interactive Brokers LLC. All rights reserved.  This code is subject to the terms
+	/* Copyright (C) 2013 Interactive Brokers LLC. All rights reserved.  This code is subject to the terms
  * and conditions of the IB API Non-Commercial License or the IB API Commercial License, as applicable. */
 
 package com.ib.client;
 
+import java.math.BigDecimal;
 import java.util.Vector;
-
-import org.joda.money.Money;
 
 public class Contract implements Cloneable {
 
@@ -36,9 +35,9 @@ public class Contract implements Cloneable {
     public String m_multiplier;
     public String m_exchange;
 
-    public Money m_bid;
-    public Money m_ask;
-    public Money m_lastPrice;
+    public BigDecimal m_bid;
+    public BigDecimal m_ask;
+    public BigDecimal m_lastPrice;
     public int m_bidSize;
     public int m_askSize;
     

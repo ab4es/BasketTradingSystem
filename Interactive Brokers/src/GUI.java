@@ -1,16 +1,18 @@
 import java.awt.BorderLayout;
 import java.awt.EventQueue;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.sql.SQLException;
 
 import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.border.EmptyBorder;
 import javax.swing.JTabbedPane;
-import javax.swing.JTextField;
+import javax.swing.border.EmptyBorder;
 
 public class GUI extends JFrame {
 
 	private JPanel contentPane;
-	private JTextField hostField;
 
 	/**
 	 * Launch the application.
@@ -30,8 +32,10 @@ public class GUI extends JFrame {
 
 	/**
 	 * Create the frame.
+	 * 
+	 * @throws SQLException
 	 */
-	public GUI() {
+	public GUI() throws SQLException {
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 720, 480);
 		contentPane = new JPanel();
@@ -41,12 +45,37 @@ public class GUI extends JFrame {
 
 		JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
 		contentPane.add(tabbedPane, BorderLayout.CENTER);
-
+ 
 		ConnectionPanel connectionPanel = new ConnectionPanel();
 		tabbedPane.addTab("Connection", null, connectionPanel, null);
 
 		BasketOrderPanel basketOrderPanel = new BasketOrderPanel();
 		tabbedPane.addTab("Basket Order", null, basketOrderPanel, null);
+		
+		tabbedPane.setSelectedComponent(basketOrderPanel);
+		
+		connectionPanel.btnConnect.doClick();
+		
+		System.out.println("CANCELING ANY REMAINING OPEN MARKET DATA CONNECTIONS");
+		System.out.println();
+		Socket.cancelAllMarketData();
+		
+		System.out.println("CLEARING ALL PREVIOUS CONTRACTS AND ORDERS");
+		Database.deleteAllContracts();
+
+		this.addWindowListener(new WindowAdapter() {
+			public void windowClosing(WindowEvent e) {
+				System.out
+						.println("CANCELING ANY OPEN MARKET DATA CONNECTIONS");
+				System.out.println();
+				try {
+					Socket.cancelAllMarketData();
+				} catch (SQLException e1) {
+					e1.printStackTrace();
+				}
+			}
+		});
+
 	}
 
 }

@@ -85,12 +85,19 @@ public class ConnectionPanel extends JPanel {
 		this.add(btnConnect, gbc_btnConnect);
 		btnConnect.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				if (Socket.connect(hostField.getText(),
-						Integer.parseInt(portField.getText()),
-						Integer.parseInt(clientIdField.getText())))
-					lblConnection.setText("Connected");
-				else
+
+				if (Database.connect("localhost", 3307, "basketdata", "root",
+						"")) {
+					if (Socket.connect(hostField.getText(),
+							Integer.parseInt(portField.getText()),
+							Integer.parseInt(clientIdField.getText()))) {
+						lblConnection.setText("Connected");
+
+					} else
+						lblConnection.setText("Connection failed!");
+				} else {
 					lblConnection.setText("Connection failed!");
+				}
 			}
 		});
 	}

@@ -3,9 +3,8 @@
 
 package com.ib.client;
 
+import java.math.BigDecimal;
 import java.util.Vector;
-
-import org.joda.money.Money;
 
 public class Order {
 	@Override
@@ -113,7 +112,7 @@ public class Order {
 	public String m_action;
 	public int m_totalQuantity;
 	public String m_orderType;
-	public Money m_lmtPrice;
+	public BigDecimal m_lmtPrice;
 	public double m_auxPrice;
 
 	// extended order fields
@@ -251,7 +250,7 @@ public class Order {
 	public Vector<TagValue> m_orderMiscOptions;
 
 	public Order() {
-		m_lmtPrice = Money.parse("USD 0.0");
+		m_lmtPrice = new BigDecimal("0.0");
 		m_auxPrice = Double.MAX_VALUE;
 		m_activeStartTime = EMPTY_STR;
 		m_activeStopTime = EMPTY_STR;
