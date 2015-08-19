@@ -113,9 +113,9 @@ public class Socket {
 		Contract contract = Database.getContractWithOrderId(orderId);
 		Order order = Database.getOrder(orderId);
 
-		Socket.cancelMarketData(contract.m_conId);
-		
-		int linkedOrdersSize = Database.findLinkedOrders(contract.m_conId)
+		Socket.cancelMarketData(contract.m_contractId);
+
+		int linkedOrdersSize = Database.findLinkedOrders(contract.m_contractId)
 				.size();
 
 		connection.cancelOrder(order.m_orderId);
@@ -124,8 +124,8 @@ public class Socket {
 		// outstanding orders, delete the contract from the database
 		if (linkedOrdersSize <= 0) {
 			System.out
-					.println("ERROR: NO CONTRACTS ARE LINKED TO THIS ORDER BY m_conId = "
-							+ contract.m_conId);
+					.println("ERROR: NO CONTRACTS ARE LINKED TO THIS ORDER BY m_contractId = "
+							+ contract.m_contractId);
 			System.out.println();
 			Database.deleteOrder(order.m_orderId);
 
@@ -135,13 +135,24 @@ public class Socket {
 			System.out.println("                    " + order);
 			System.out.println();
 			Database.deleteOrder(order.m_orderId);
-			Database.deleteContract(contract.m_conId);
+			Database.deleteContract(contract.m_contractId);
 		} else {
 			System.out
 					.println("CONTRACT WAS NOT DELETED FROM DATABASE AS IT IS LINKED TO OTHER OUTSTANDING ORDERS");
 			System.out.println();
 			Database.deleteOrder(order.m_orderId);
 		}
+	}
+
+	/*
+	 * Cancels the order and removes it from the database but does not do
+	 * anything with its contract
+	 */
+	public static void cancelJustOrder(int orderId) throws SQLException {
+		Order order = Database.getOrder(orderId);
+		Socket.cancelMarketData(order.m_contractId);
+		connection.cancelOrder(order.m_orderId);
+		Database.deleteOrder(orderId);
 	}
 
 	/*
@@ -165,30 +176,31 @@ public class Socket {
 	/*
 	 * Request market data for a contract
 	 */
-	public static boolean requestMarketData(int conId) throws SQLException {
+	public static boolean requestMarketData(int contractId) throws SQLException {
 		boolean marketDataFound = true;
-		Contract contract = Database.getContract(conId);
-		connection.reqMktData(contract.m_conId, contract, null, true, null);
+		Contract contract = Database.getContract(contractId);
+		connection
+				.reqMktData(contract.m_contractId, contract, null, true, null);
 
 		// Ensure market data is either requested or times out so that no
 		// errors are thrown
 		long startTime = System.currentTimeMillis();
-		while ((Database.getBid(contract.m_conId) <= 0.0
-				|| Database.getAsk(contract.m_conId) <= 0.0
-				|| Database.getLastPrice(contract.m_conId) <= 0.0
-				|| Database.getBidSize(contract.m_conId) <= 0 || Database
-				.getAskSize(contract.m_conId) <= 0)
-				&& (System.currentTimeMillis() - startTime) < 5000) {
+		while ((Database.getBid(contract.m_contractId) <= 0.0
+				|| Database.getAsk(contract.m_contractId) <= 0.0
+				|| Database.getLastPrice(contract.m_contractId) <= 0.0
+				|| Database.getBidSize(contract.m_contractId) <= 0 || Database
+				.getAskSize(contract.m_contractId) <= 0)
+				&& (System.currentTimeMillis() - startTime) < 10000) {
 			System.out.print("");
 		}
 
 		// TWS was not able to retrieve all needed market data within the time
 		// allocated
-		if (Database.getBid(contract.m_conId) <= 0.0
-				|| Database.getBid(contract.m_conId) <= 0.0
-				|| Database.getLastPrice(contract.m_conId) <= 0.0
-				|| Database.getBidSize(contract.m_conId) <= 0
-				|| Database.getAskSize(contract.m_conId) <= 0) {
+		if (Database.getBid(contract.m_contractId) <= 0.0
+				|| Database.getBid(contract.m_contractId) <= 0.0
+				|| Database.getLastPrice(contract.m_contractId) <= 0.0
+				|| Database.getBidSize(contract.m_contractId) <= 0
+				|| Database.getAskSize(contract.m_contractId) <= 0) {
 			// Basket.addBrokenContract(contract);
 			marketDataFound = false;
 		}
@@ -209,14 +221,14 @@ public class Socket {
 	/*
 	 * Cancel market data for a contract
 	 */
-	public static void cancelMarketData(int conId) throws SQLException {
-		Contract contract = Database.getContract(conId);
+	public static void cancelMarketData(int contractId) throws SQLException {
+		Contract contract = Database.getContract(contractId);
 		System.out.println(Database.getTimestamp() + "MARKET DATA CANCELLED: "
 				+ contract);
 		System.out.println();
-		connection.cancelMktData(conId);
+		connection.cancelMktData(contractId);
 	}
-	
+
 	/*
 	 * Cancel market data for all contracts
 	 */
@@ -224,7 +236,7 @@ public class Socket {
 		ArrayList<Contract> contracts = Database.getAllContracts();
 		if (contracts != null && !contracts.isEmpty()) {
 			for (Contract contract : contracts) {
-				cancelMarketData(contract.m_conId);
+				cancelMarketData(contract.m_contractId);
 			}
 		}
 	}

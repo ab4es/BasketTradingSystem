@@ -9,7 +9,7 @@ import java.util.Vector;
 public class Order {
 	@Override
 	public String toString() {
-		return "Order [m_orderId=" + m_orderId + ", m_conId=" + m_conId
+		return "Order [m_orderId=" + m_orderId + ", m_contractId=" + m_contractId
 				+ ", m_filled=" + m_filled + ", m_submitted=" + m_submitted
 				+ ", m_clientId=" + m_clientId + ", m_permId=" + m_permId
 				+ ", m_action=" + m_action + ", m_totalQuantity="
@@ -101,7 +101,7 @@ public class Order {
 	final public static String EMPTY_STR = "";
 
 	// Basket Order variables
-	public int m_conId;
+	public int m_contractId;
 	public boolean m_filled;
 	public boolean m_submitted;
 

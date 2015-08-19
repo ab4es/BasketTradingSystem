@@ -39,14 +39,14 @@ public class CustomWrapper implements EWrapper {
 	}
 
 	@Override
-	public void tickPrice(int conId, int field, double price, int canAutoExecute)
+	public void tickPrice(int contractId, int field, double price, int canAutoExecute)
 			throws SQLException {
-		Database.updateBidAskLastPrice(conId, field, price);
+		Database.updateBidAskLastPrice(contractId, field, price);
 	}
 
 	@Override
-	public void tickSize(int conId, int field, int size) throws SQLException {
-		Database.updateBidAskSizes(conId, field, size);
+	public void tickSize(int contractId, int field, int size) throws SQLException {
+		Database.updateBidAskSizes(contractId, field, size);
 	}
 
 	@Override

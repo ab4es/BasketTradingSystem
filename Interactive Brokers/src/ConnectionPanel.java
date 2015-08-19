@@ -86,8 +86,8 @@ public class ConnectionPanel extends JPanel {
 		btnConnect.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 
-				if (Database.connect("localhost", 3307, "basketdata", "root",
-						"")) {
+				if (Database.connect("localhost", 3306, "basketdata", "root",
+						"sainjJ17")) {
 					if (Socket.connect(hostField.getText(),
 							Integer.parseInt(portField.getText()),
 							Integer.parseInt(clientIdField.getText()))) {
